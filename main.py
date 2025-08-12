@@ -157,17 +157,20 @@ def build_tree(folder: Folder) -> TreeNode:
     return TreeNode(child_weight, value_mean, folder.name, childs)
 
 
-copy_ankis(r"C:\Users\11951\AppData\Roaming\Anki2\arigi\collection.anki2")
-items = get_items()
-folderroot = build_folder(items)
-treeroot = build_tree(folderroot)
-displays = render_treemap(treeroot, (0, 0, 600, 600), 0.01)
+ANKI_BASE = r"C:\Users\11951\AppData\Roaming\Anki2\arigi" + "\\"
+if __name__ == "__main__":
+    copy_ankis(ANKI_BASE + "collection.anki2")
 
-from treemap import svg_from_treemap
+    items = get_items()
+    folderroot = build_folder(items)
+    treeroot = build_tree(folderroot)
+    displays = render_treemap(treeroot, (0, 0, 600, 600), 0.01)
 
-svg_content = svg_from_treemap(displays, colormap_goldie, 8)
+    from treemap import svg_from_treemap
 
-with open("treemap-template.html", "r", encoding="utf-8") as f:
-    with open("treemap.html", "w", encoding="utf-8") as g:
-        content = f.read()
-        g.write(content.replace("<!-- TREEMAP_HERE -->", svg_content))
+    svg_content = svg_from_treemap(displays, colormap_goldie, 8)
+
+    with open("treemap-template.html", "r", encoding="utf-8") as f:
+        with open("treemap.html", "w", encoding="utf-8") as g:
+            content = f.read()
+            g.write(content.replace("<!-- TREEMAP_HERE -->", svg_content))

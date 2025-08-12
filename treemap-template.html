@@ -1,26 +1,31 @@
 <html>
   <head>
+    <meta charset="UTF-8" />
     <title>Treemap</title>
     <style>
       .container {
         display: flex;
+        flex-direction: row;
         justify-content: center;
         align-items: center;
         height: 100vh;
         gap: 20px;
         padding: 20px;
       }
+      .content-col {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        gap: 20px;
+      }
       .description {
-        width: 30%;
-        height: 80vh;
         border: 1px solid #ccc;
         padding: 15px;
-        overflow-y: auto;
+        overflow: auto;
       }
       .treemap {
-        width: 70%;
-        height: 80vh;
-        display: flex;
         justify-content: center;
         align-items: center;
       }
@@ -40,7 +45,7 @@
         font-size: 20px;
         display: none;
       }
-      #show-answer:checked ~ .description .answer {
+      .description .answer.shown {
         display: block;
       }
       .description * {
@@ -54,14 +59,49 @@
           const svgElement = document.querySelector(".treemap svg");
           const rects = svgElement.querySelectorAll("rect[data-text]");
           const description = document.querySelector(".description");
+          let lockedElement = null;
+
+          // 更新显示内容的函数
+          function updateDescription(element) {
+            const text = element.getAttribute("data-text");
+            description.innerHTML = DOMPurify.sanitize(text);
+          }
+          const showAnswerCheckbox = document.getElementById("show-answer");
+          showAnswerCheckbox.addEventListener("change", function () {
+            const answerElements = document.querySelectorAll(
+              ".description .answer",
+            );
+            if (this.checked) {
+              answerElements.forEach((el) => el.classList.add("shown"));
+            } else {
+              answerElements.forEach((el) => el.classList.remove("shown"));
+            }
+          });
+
+          // 为每个矩形添加事件监听
           rects.forEach((rect) => {
+            // 鼠标悬停事件 - 仅在未锁定时更新
             rect.addEventListener("mouseover", function () {
-              const text = this.getAttribute("data-text");
-              const value = this.getAttribute("data-value");
-              description.innerHTML = DOMPurify.sanitize(text);
+              if (!lockedElement) {
+                updateDescription(rect);
+              }
             });
-            rect.addEventListener("mouseout", function () {
-              description.innerHTML = "";
+
+            // 点击事件 - 锁定/解锁当前元素
+            rect.addEventListener("click", function () {
+              if (lockedElement === rect) {
+                // 解锁
+                lockedElement = null;
+                rect.style.strokeWidth = "0.5px";
+              } else {
+                // 锁定到当前元素
+                if (lockedElement) {
+                  lockedElement.style.strokeWidth = "0.5px";
+                }
+                lockedElement = rect;
+                rect.style.strokeWidth = "5px";
+                updateDescription(rect);
+              }
             });
           });
         };
@@ -70,9 +110,13 @@
   </head>
   <body>
     <div class="container">
-      <input type="checkbox" id="show-answer">
-      <label for="show-answer">Show Answer</label>
-      <div class="description"></div>
+      <div class="content-col">
+        <div class="checkbox-container">
+          <input type="checkbox" id="show-answer" />
+          <label for="show-answer">显示答案</label>
+        </div>
+        <div class="description"></div>
+      </div>
       <div class="treemap">
         <!-- TREEMAP_HERE -->
       </div>
