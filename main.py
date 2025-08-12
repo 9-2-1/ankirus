@@ -1,12 +1,19 @@
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import Optional
+import html
 import shutil
 import os
 
 from anki.collection import Collection, SearchNode
 
-from treemap import TreeNode, render_treemap, colormap_goldie, colormap_bluesea
+from treemap import (
+    TreeNode,
+    render_treemap,
+    colormap_goldie,
+    colormap_bluesea,
+    color_from_value,
+)
 
 
 # pub fn current_retrievability(state: MemoryState, days_elapsed: f32, decay: f32) -> f32 {
@@ -86,11 +93,26 @@ def get_items() -> list[Item]:
         #         (t4d - w.latest_review) / 86400,
         #         card.decay or 0.1542,
         #     )
+        card_text = "".join(
+            [
+                f'<div style="font-size:40px;font-weight:bold;color:{color_from_value(R, colormap_goldie, Loff=-0.2)}">',
+                html.escape(f"{R:6.2%}"),
+                "</div>",
+                "<br>",
+                '<div style="font-size:20px;font-weight:bold;">',
+                html.escape("::".join(group_path)),
+                "</div>",
+                "<br>",
+                "<div>",
+                name,
+                "</div>",
+            ]
+        )
         items.append(
             Item(
                 group_path,
                 card_id,
-                "::".join(group_path) + "\n" + name,
+                card_text,
                 T,
                 S,
                 D,
