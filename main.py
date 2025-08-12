@@ -9,7 +9,6 @@ from anki.collection import Collection, SearchNode
 from treemap import TreeNode, render_treemap, colormap_goldie, colormap_bluesea
 
 
-
 # pub fn current_retrievability(state: MemoryState, days_elapsed: f32, decay: f32) -> f32 {
 #     let factor = 0.9f32.powf(1.0 / -decay) - 1.0;
 #     (days_elapsed / state.stability * factor + 1.0).powf(-decay)
@@ -69,7 +68,7 @@ def get_items() -> list[Item]:
         name = card.note().fields[0]
         w = c.card_stats_data(cid)
         T = datetime.fromtimestamp(w.latest_review) if w.latest_review != 0 else None
-        D = w.memory_state.difficulty or 10.0
+        D = w.memory_state.difficulty or 5.5
         S = w.memory_state.stability or 0.0
         R = w.fsrs_retrievability or 0.0
         # R = 0.0
@@ -144,5 +143,7 @@ from treemap import svg_from_treemap
 
 svg_content = svg_from_treemap(displays, colormap_goldie, 8)
 
-with open("treemap.svg", "w", encoding="utf-8") as f:
-    f.write(svg_content)
+with open("treemap-template.html", "r", encoding="utf-8") as f:
+    with open("treemap.html", "w", encoding="utf-8") as g:
+        content = f.read()
+        g.write(content.replace("<!-- TREEMAP_HERE -->", svg_content))

@@ -2,4 +2,4 @@ __pycache__
 *.un~
 collection.anki2
 collection.anki2-wal
-treemap.svg
+treemap.html

@@ -1,2 +1,2 @@
 @call conda run -n ankirus python main.py
-@pause
+@start treemap.html

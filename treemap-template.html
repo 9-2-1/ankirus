@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <title>Treemap</title>
+    <style>
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        gap: 20px;
+        padding: 20px;
+      }
+      .description {
+        width: 30%;
+        height: 80vh;
+        border: 1px solid #ccc;
+        padding: 15px;
+        overflow-y: auto;
+      }
+      .treemap {
+        width: 70%;
+        height: 80vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+    <script src="purify.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        window.onload = function () {
+          const svgElement = document.querySelector(".treemap svg");
+          const rects = svgElement.querySelectorAll("rect[data-text]");
+          const description = document.querySelector(".description");
+          rects.forEach((rect) => {
+            rect.addEventListener("mouseover", function () {
+              const text = this.getAttribute("data-text");
+              const value = this.getAttribute("data-value");
+              description.innerHTML = DOMPurify.sanitize(text);
+            });
+            rect.addEventListener("mouseout", function () {
+              description.innerHTML = "";
+            });
+          });
+        };
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="description"></div>
+      <div class="treemap">
+        <!-- TREEMAP_HERE -->
+      </div>
+    </div>
+  </body>
+</html>
