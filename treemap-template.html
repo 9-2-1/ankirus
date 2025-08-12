@@ -24,6 +24,28 @@
         justify-content: center;
         align-items: center;
       }
+      .description .retrievability {
+        font-size: 40px;
+        font-weight: bold;
+        text-align: right;
+      }
+      .description .group {
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .description .question {
+        font-size: 20px;
+      }
+      .description .answer {
+        font-size: 20px;
+        display: none;
+      }
+      #show-answer:checked ~ .description .answer {
+        display: block;
+      }
+      .description * {
+        margin: 10px;
+      }
     </style>
     <script src="purify.min.js"></script>
     <script>
@@ -48,6 +70,8 @@
   </head>
   <body>
     <div class="container">
+      <input type="checkbox" id="show-answer">
+      <label for="show-answer">Show Answer</label>
       <div class="description"></div>
       <div class="treemap">
         <!-- TREEMAP_HERE -->

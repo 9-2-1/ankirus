@@ -73,6 +73,7 @@ def get_items() -> list[Item]:
         card_id = card.id
 
         name = card.note().fields[0]
+        back = card.note().fields[1]
         w = c.card_stats_data(cid)
         T = datetime.fromtimestamp(w.latest_review) if w.latest_review != 0 else None
         D = w.memory_state.difficulty or 5.5
@@ -95,16 +96,17 @@ def get_items() -> list[Item]:
         #     )
         card_text = "".join(
             [
-                f'<div style="font-size:40px;font-weight:bold;color:{color_from_value(R, colormap_goldie, Loff=-0.2)}">',
-                html.escape(f"{R:6.2%}"),
-                "</div>",
-                "<br>",
-                '<div style="font-size:20px;font-weight:bold;">',
+                '<div class="group">',
                 html.escape("::".join(group_path)),
                 "</div>",
-                "<br>",
-                "<div>",
+                f'<div class="retrievability" style="color:{color_from_value(R, colormap_goldie, Loff=-0.2)}">',
+                html.escape(f"{R:6.2%}"),
+                "</div>",
+                '<div class="question">',
                 name,
+                "</div>",
+                '<div class="answer">',
+                back,
                 "</div>",
             ]
         )
