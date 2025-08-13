@@ -39,10 +39,22 @@
         font-weight: bold;
       }
       .description .question {
+        position: relative;
         font-size: 20px;
+        max-width: 50vw;
+        max-height: 40vh;
+        overflow: auto;
+      }
+      .description img {
+        max-width: 48vw;
+        max-height: 50vh;
       }
       .description .answer {
+        position: relative;
         font-size: 20px;
+        max-width: 50vw;
+        max-height: 40vh;
+        overflow: auto;
         display: none;
       }
       .description .answer.shown {
@@ -65,25 +77,37 @@
           function updateDescription(element) {
             const text = element.getAttribute("data-text");
             description.innerHTML = DOMPurify.sanitize(text);
+            updateShowAnswer();
           }
-          const showAnswerCheckbox = document.getElementById("show-answer");
-          showAnswerCheckbox.addEventListener("change", function () {
+          function updateShowAnswer() {
             const answerElements = document.querySelectorAll(
               ".description .answer",
             );
-            if (this.checked) {
+            if (showAnswerCheckbox.checked) {
               answerElements.forEach((el) => el.classList.add("shown"));
             } else {
               answerElements.forEach((el) => el.classList.remove("shown"));
             }
+          }
+          const showAnswerCheckbox = document.getElementById("show-answer");
+          showAnswerCheckbox.addEventListener("change", function () {
+            updateShowAnswer();
           });
 
+          // 标记根节点
+          root = rects[0];
           // 为每个矩形添加事件监听
           rects.forEach((rect) => {
             // 鼠标悬停事件 - 仅在未锁定时更新
             rect.addEventListener("mouseover", function () {
               if (!lockedElement) {
                 updateDescription(rect);
+              }
+            });
+
+            rect.addEventListener("mouseout", function () {
+              if (!lockedElement) {
+                updateDescription(root);
               }
             });
 
@@ -123,3 +147,5 @@
     </div>
   </body>
 </html>
+
+<!-- vim: set expandtab tabstop=2: -->

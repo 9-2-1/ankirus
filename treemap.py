@@ -231,7 +231,7 @@ def svg_from_treemap(
     for d in displays:
         x, y, w, h = d.rect
         color = color_from_value(d.value, colormap)
-        color_stroke = color_from_value(d.value, colormap, Loff=-0.1)
+        color_stroke = color_from_value(d.value, colormap, Loff=-0.05)
         # Add rectangle
         svg_content.append(
             f'  <rect class="rect" x="{x}" y="{y}" width="{w}" height="{h}" fill="{color}" stroke="{color_stroke}" stroke-width="0.5" data-text="{_escape_svg_text(d.text)}" data-value="{d.value}" />'
