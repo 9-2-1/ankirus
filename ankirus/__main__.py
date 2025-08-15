@@ -2,6 +2,7 @@ import asyncio
 import logging
 import json
 from typing import cast
+from dataclasses import asdict
 
 from aiohttp import web
 
@@ -39,7 +40,7 @@ async def handle_cards(request: web.Request) -> web.Response:
             card_groups = card_groups.subgroup(*a_group.split("::"))
         except GroupNotFound:
             return web.Response(text='{"error":"group not found"}', status=404)
-    jsondict = cast(Json, card_groups.to_dict(encode_json=True))
+    jsondict = cast(Json, asdict(card_groups))
     jsondict = strip_dight(jsondict)
     jsondata = json.dumps(jsondict, ensure_ascii=False, separators=(",", ":"))
     response = web.Response(text=jsondata, content_type="application/json")

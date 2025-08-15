@@ -1,12 +1,11 @@
 from anki.collection import Collection, QUEUE_TYPE_SUSPENDED
 from dataclasses import dataclass, field
-from dataclasses_json import DataClassJsonMixin
 from typing import Literal
 import time
 
 
 @dataclass
-class RetentionParams(DataClassJsonMixin):
+class RetentionParams:
     basetime: int  # Unix Timestamp
     difficulty: float
     stability: float
@@ -24,7 +23,7 @@ class RetentionParams(DataClassJsonMixin):
 
 
 @dataclass
-class CardStats(DataClassJsonMixin):
+class CardStats:
     total: int = 1
     paused: Literal[0, 1] = 0
     weight: float = 1
@@ -33,7 +32,7 @@ class CardStats(DataClassJsonMixin):
 
 
 @dataclass
-class Card(DataClassJsonMixin):
+class Card:
     cid: int
     content: tuple[str, str]
     retention_params: RetentionParams
@@ -52,7 +51,7 @@ def stat_from_card(card: Card, timestamp: float) -> CardStats:
 
 
 @dataclass
-class CardGroupStats(DataClassJsonMixin):
+class CardGroupStats:
     total: int = 0
     paused: int = 0
     weight: float = 0.0
@@ -84,7 +83,7 @@ class GroupNotFound(Exception):
 
 
 @dataclass
-class CardGroups(DataClassJsonMixin):
+class CardGroups:
     cards: list[Card] = field(default_factory=list)
     groups: dict[str, "CardGroups"] = field(default_factory=dict)
     stats: CardGroupStats = field(default_factory=CardGroupStats)
@@ -109,7 +108,7 @@ class CardGroups(DataClassJsonMixin):
 
 
 @dataclass
-class DisplayGroups(DataClassJsonMixin):
+class DisplayGroups:
     cards: list[CardStats] = field(default_factory=list)
     groups: dict[str, "DisplayGroups"] = field(default_factory=dict)
     # items omitted because of too small
