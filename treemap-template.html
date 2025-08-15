@@ -96,6 +96,7 @@
 
           // 标记根节点
           root = rects[0];
+          updateDescription(root);
           // 为每个矩形添加事件监听
           rects.forEach((rect) => {
             // 鼠标悬停事件 - 仅在未锁定时更新

@@ -141,6 +141,7 @@ def get_items() -> list[Item]:
                 R,
             )
         )
+    c.close()
     return items
 
 

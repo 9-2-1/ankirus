@@ -1,5 +1,8 @@
 __pycache__
+node_modules
 *.un~
 collection.anki2
 collection.anki2-wal
 treemap.html
+ankirus_nodejs/*.js
+web/*.js
