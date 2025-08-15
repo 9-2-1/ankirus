@@ -2,6 +2,7 @@ from asyncio import subprocess as subproc, Event
 import asyncio
 import json
 from typing import Optional, Any, TypedDict, cast
+from base64 import b64decode
 
 
 class ReplyOK(TypedDict):
@@ -24,7 +25,6 @@ class NodeJSAgent:
         self.reply_event: dict[int, Event] = {}
         self.reply: dict[int, Reply] = {}
         self.stdin_lock = asyncio.Lock()
-
 
     async def agent_run(self) -> None:
         self.process = await subproc.create_subprocess_exec(
@@ -100,11 +100,5 @@ class NodeJSAgent:
             assert self.process.stdin is not None
             self.process.stdin.close()
 
-    async def test(self, value: str) -> str:
-        return cast(str, await self.agent_call("test", value))
-    
     async def purify(self, value: str) -> str:
         return cast(str, await self.agent_call("purify", value))
-
-    async def mathjax(self, value: str) -> str:
-        return cast(str, await self.agent_call("mathjax", value))

@@ -247,14 +247,20 @@ async def handle_root(request: web.Request) -> web.Response:
         req_timestamp = int(cache_timestamp) - 1
     headers = {"Last-Modified": last_modified, "Cache-Control": "no-cache"}
     if int(cache_timestamp) > int(req_timestamp):
-        return web.Response(
+        response = web.Response(
             text=html_content, content_type="text/html", headers=headers
         )
+        response.enable_compression(strategy=9)
+        return response
     return web.Response(status=304, headers=headers)
 
 
 async def handle_script(request: web.Request) -> web.FileResponse:
-    return web.FileResponse("/home/richia/arigi.top/html/ankirus/" + request.path[1:])
+    response = web.FileResponse(
+        "/home/richia/arigi.top/html/ankirus/" + request.path[1:]
+    )
+    response.enable_compression(strategy=9)
+    return response
 
 
 async def main() -> None:

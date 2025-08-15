@@ -3,6 +3,7 @@ node_modules
 *.un~
 collection.anki2
 collection.anki2-wal
+tmp-*
 treemap.html
 ankirus_nodejs/*.js
 web/*.js

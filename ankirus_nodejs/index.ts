@@ -1,6 +1,5 @@
 import readline from "node:readline";
 import { purify } from "./purify.js";
-import { mathjax } from "./mathjax.js";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -35,7 +34,6 @@ async function test(request: string): Promise<string> {
 const functable: { [key: string]: (request: any) => Promise<any> } = {
   test: test,
   purify: purify,
-  mathjax: mathjax,
 };
 async function handle_request(
   id: number,
