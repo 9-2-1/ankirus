@@ -2,6 +2,9 @@ from anki.collection import Collection, QUEUE_TYPE_SUSPENDED
 from dataclasses import dataclass, field
 from typing import Literal
 import time
+import logging
+
+log = logging.getLogger(__name__)
 
 
 @dataclass

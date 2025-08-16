@@ -3,11 +3,13 @@ import logging
 import json
 from typing import cast
 from dataclasses import asdict
+import time
+import calendar
 
 from aiohttp import web
 
 from .ankidata import GroupNotFound
-from .ankicached import load_anki_data_cached
+from .ankicached import load_anki_data_cached, get_anki_data_mtime
 from .nodejs import NodeJSAgent
 
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +35,20 @@ def strip_dight(obj: Json) -> Json:
 
 
 async def handle_cards(request: web.Request) -> web.Response:
+    cache_timestamp = await get_anki_data_mtime(ANKI_USERPROFILE + "collection.anki2")
+    last_modified = time.strftime(
+        "%a, %d %b %Y %H:%M:%S GMT", time.gmtime(int(cache_timestamp))
+    )
+    if_modified_since = request.headers.get("If-Modified-Since", "?")
+    try:
+        req_timestamp = calendar.timegm(
+            time.strptime(if_modified_since, "%a, %d %b %Y %H:%M:%S GMT")
+        )
+    except ValueError:
+        req_timestamp = int(cache_timestamp) - 1
+    headers = {"Last-Modified": last_modified, "Cache-Control": "no-cache"}
+    if int(cache_timestamp) <= int(req_timestamp):
+        return web.Response(status=304, headers=headers)
     card_groups = await load_anki_data_cached(ANKI_USERPROFILE + "collection.anki2")
     a_group = request.query.get("group")
     if a_group is not None and a_group != "":
@@ -43,8 +59,10 @@ async def handle_cards(request: web.Request) -> web.Response:
     jsondict = cast(Json, asdict(card_groups))
     jsondict = strip_dight(jsondict)
     jsondata = json.dumps(jsondict, ensure_ascii=False, separators=(",", ":"))
-    response = web.Response(text=jsondata, content_type="application/json")
-    response.enable_compression()
+    response = web.Response(
+        text=jsondata, content_type="application/json", headers=headers
+    )
+    response.enable_compression(strategy=9)
     return response
 
 
