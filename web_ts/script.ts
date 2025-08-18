@@ -1,10 +1,10 @@
 // 定义数据类型
 type RetentionParams = {
-  basetime: number;  // Unix Timestamp
+  basetime: number; // Unix Timestamp
   difficulty: number;
   stability: number;
   decay: number;
-}
+};
 
 type CardStats = {
   total: number;
@@ -12,15 +12,15 @@ type CardStats = {
   weight: number;
   retention: number;
   stability: number;
-}
+};
 
 type Card = {
-  cid: number;  // 对应后端的cid
+  cid: number; // 对应后端的cid
   content: [string, string];
   retention_params: RetentionParams;
   paused: boolean;
   stats: CardStats;
-}
+};
 
 type CardGroupStats = {
   total: number;
@@ -28,13 +28,13 @@ type CardGroupStats = {
   weight: number;
   retention_weight: number;
   stability_weight: number;
-}
+};
 
 type CardGroup = {
   cards: Card[];
   groups: Record<string, CardGroup>;
   stats: CardGroupStats;
-}
+};
 
 // 主应用类
 class AnkirusApp {
@@ -76,36 +76,36 @@ class AnkirusApp {
       // 显示加载状态
       document.getElementById("question")!.textContent = "Loading...";
       document.getElementById("answer")!.textContent = "";
-  
+
       // 构建API请求URL
       let url = "/cards/";
       if (group) {
         url += `?group=${encodeURIComponent(group)}`;
       }
-  
+
       // 从API获取数据
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       this.currentName = group ?? "";
       this.currentGroup = data;
       // 使用flattenCards方法获取组及其子组中的所有卡片
       this.cards = this.flattenCards(data);
       this.currentCardIndex = 0;
-  
+
       // 更新组信息
       this.updateGroupInfo();
-  
+
       // 如果有卡片，渲染第一张
       if (this.cards.length > 0) {
         this.renderCard(this.cards[0]);
       } else {
         document.getElementById("question")!.textContent = "No cards found";
       }
-  
+
       // 更新状态图数据
       this.updateStatemapData();
     } catch (error) {
@@ -123,7 +123,7 @@ class AnkirusApp {
 
     // 更新组保留率
     document.getElementById("retention")!.textContent =
-      `${(this.currentGroup.stats.retention_weight / this.currentGroup.stats.weight * 100).toFixed(1)}%`;
+      `${((this.currentGroup.stats.retention_weight / this.currentGroup.stats.weight) * 100).toFixed(1)}%`;
 
     // 更新子组信息
     const groupsContainer = document.getElementById("descp-groups")!;
@@ -138,20 +138,20 @@ class AnkirusApp {
           <div class="groupname">${this.currentName}::${key}</div>
           <div class="grouplearnt">${subgroup.stats.total}</div>
           <div class="grouptotal">${subgroup.stats.total}</div>
-          <div class="groupretention">${(subgroup.stats.retention_weight / subgroup.stats.weight * 100).toFixed(1)}%</div>
+          <div class="groupretention">${((subgroup.stats.retention_weight / subgroup.stats.weight) * 100).toFixed(1)}%</div>
       `;
 
       // 添加点击事件，加载该子组
       groupElement.addEventListener("click", () => {
-        if (this.currentName != ""){
+        if (this.currentName != "") {
           this.loadCards(`${this.currentName}::${key}`);
-        }else{
+        } else {
           this.loadCards(key);
         }
       });
 
       groupsContainer.appendChild(groupElement);
-      });
+    });
   }
 
   renderCard(card: Card) {
@@ -206,7 +206,7 @@ class AnkirusApp {
   initStatemap() {
     // 初始化状态图容器
     const statemapContent = document.getElementById("statemap-content")!;
-    statemapContent.innerHTML = '';
+    statemapContent.innerHTML = "";
 
     // 创建画布
     const canvas = document.createElement("canvas");
@@ -331,5 +331,5 @@ class AnkirusApp {
 
 // 当DOM加载完成后初始化应用
 document.addEventListener("DOMContentLoaded", () => {
-  new AnkirusApp();
+  // new AnkirusApp();
 });
