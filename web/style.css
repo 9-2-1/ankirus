@@ -5,9 +5,13 @@ body {
   overflow: hidden;
 }
 
+button, select {
+  border: none;
+}
+
 * {
   box-sizing: border-box;
-  border: 1px solid #e0e0e0;
+  outline: 1px solid #e0e0e0;
 }
 
 #ankirus {
@@ -50,8 +54,7 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-  align-items: center;
-  cursor: pointer;
+  align-items: stretch;
 }
 
 .groupname {
@@ -83,7 +86,7 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-  align-items: center;
+  align-items: stretch;
 }
 
 .cardretention {
@@ -134,7 +137,7 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-  align-items: center;
+  align-items: stretch;
   flex-wrap: wrap;
 }
 
@@ -154,7 +157,7 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
-  align-items: center;
+  align-items: stretch;
 }
 
 #statemap-time-container > input {
