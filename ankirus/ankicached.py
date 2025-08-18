@@ -28,10 +28,12 @@ cache_groups: CardGroups = CardGroups()
 
 
 async def get_anki_data_mtime(anki_db: str) -> float:
-    return max(
-        os.stat(anki_db).st_mtime,
-        os.stat(anki_db + "-wal").st_mtime,
-    )
+    mtime = 0.0
+    if os.path.exists(anki_db):
+        mtime = max(os.stat(anki_db).st_mtime, mtime)
+    if os.path.exists(anki_db + "-wal"):
+        mtime = max(os.stat(anki_db + "-wal").st_mtime, mtime)
+    return mtime
 
 
 async def load_anki_data_cached(anki_db: str) -> CardGroups:
