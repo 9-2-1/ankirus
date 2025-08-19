@@ -43,6 +43,8 @@ class AnkirusApp {
   private currentCard: Card | null = null;
   private statemap: StateMap = new StateMap();
 
+  private rootGroup: CardGroup | null = null;
+
   constructor() {
     this.init();
   }
@@ -55,16 +57,20 @@ class AnkirusApp {
   async loadCards(group?: string) {
     try {
       let url = "/cards/";
-      if (group !== undefined) {
-        url += `?group=${encodeURIComponent(group)}`;
-      }
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      this.rootGroup = data;
       this.currentName = group ?? "";
-      this.currentGroup = data;
+      this.currentGroup = this.rootGroup;
+      const groupPath = this.currentName.split("::");
+      for (const name of groupPath) {
+        if (name != "") {
+          this.currentGroup = this.currentGroup!.groups[name];
+        }
+      }
       this.updateGroupInfo();
     } catch (error) {
       console.error("Error loading cards:", error);
