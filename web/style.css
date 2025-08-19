@@ -5,7 +5,8 @@ body {
   overflow: hidden;
 }
 
-button, select {
+button,
+select {
   border: none;
 }
 
@@ -57,20 +58,31 @@ button, select {
   align-items: stretch;
 }
 
+.groupindent {
+  white-space: pre;
+  color: #334155;
+  cursor: pointer;
+}
+
 .groupname {
   flex-grow: 1;
   white-space: pre;
   color: #334155;
+  text-decoration: underline;
+  cursor: pointer;
+  width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .grouptotal {
-  flex-basis: 70px;
+  width: 70px;
   text-align: center;
   color: #3b82f6;
 }
 
 .groupretention {
-  flex-basis: 70px;
+  width: 70px;
   text-align: center;
 }
 
@@ -90,7 +102,7 @@ button, select {
 }
 
 .cardretention {
-  flex-basis: 70px;
+  width: 70px;
   text-align: center;
 }
 
@@ -101,7 +113,7 @@ button, select {
   text-align: left;
   text-wrap: wrap;
   white-space: pre-wrap;
-  flex-basis: 0;
+  height: 0;
 }
 
 #question img,
@@ -131,6 +143,12 @@ button, select {
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
+  overflow: hidden;
+}
+
+#statemap-canvas {
+  max-height: 100%;
+  max-width: 100%;
 }
 
 #statemap-legend {
