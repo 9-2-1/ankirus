@@ -84,6 +84,7 @@ class AnkirusApp {
     div.title = content;
     return div;
   }
+
   _groupElement(
     indent: string,
     name: string,
@@ -118,16 +119,15 @@ class AnkirusApp {
     }
     return groupElement;
   }
+
   updateGroupInfo() {
     if (this.currentGroup === null) {
       return;
     }
-
     const groupsContainer = document.getElementById("descp-groups")!;
     Array.from(groupsContainer.children).forEach((element) => {
       groupsContainer.removeChild(element);
     });
-
     if (this.currentName != "") {
       let parentName;
       if (this.currentName.includes("::")) {
@@ -145,16 +145,18 @@ class AnkirusApp {
     groupsContainer.appendChild(
       this._groupElement("  ", this.currentName, null, this.currentGroup),
     );
-    Object.entries(this.currentGroup.groups).forEach(([key, subgroup]) => {
-      groupsContainer.appendChild(
-        this._groupElement(
-          "  → ",
-          key,
-          this.currentName != "" ? `${this.currentName}::${key}` : key,
-          subgroup,
-        ),
-      );
-    });
+    Object.entries(this.currentGroup.groups)
+      .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+      .forEach(([key, subgroup]) => {
+        groupsContainer.appendChild(
+          this._groupElement(
+            "  → ",
+            key,
+            this.currentName != "" ? `${this.currentName}::${key}` : key,
+            subgroup,
+          ),
+        );
+      });
   }
 
   renderCard(card: Card) {
@@ -170,26 +172,21 @@ class AnkirusApp {
     document.getElementById("show-answer")!.addEventListener("click", () => {
       this.showAnswer();
     });
-
-    // 状态图样式选择事件
     document
       .getElementById("statemap-style")!
       .addEventListener("change", () => {
         this.updateStatemap();
       });
-
     document
       .getElementById("statemap-color")!
       .addEventListener("change", () => {
         this.updateStatemap();
       });
-
     document
       .getElementById("statemap-weight")!
       .addEventListener("change", () => {
         this.updateStatemap();
       });
-
     document.getElementById("statemap-time")!.addEventListener("input", () => {
       this.updateStatemap();
     });
@@ -198,9 +195,23 @@ class AnkirusApp {
   updateStatemap() {}
 }
 
-// test
-
-type Color = [number, number, number];
+class Color {
+  constructor(
+    public r: number,
+    public g: number,
+    public b: number,
+  ) {}
+  RGB(): [number, number, number] {
+    return [this.r, this.g, this.b];
+  }
+  interpolate(other: Color, t: number): Color {
+    return new Color(
+      this.r + (other.r - this.r) * t,
+      this.g + (other.g - this.g) * t,
+      this.b + (other.b - this.b) * t,
+    );
+  }
+}
 class StateMap {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -225,9 +236,9 @@ class StateMap {
     for (let j = 0; j < this.segments.length; j++) {
       if (pos > this.segments[j][0]) {
         const c = this.segments[j][1];
-        this.imgdata.data[index] = c[0];
-        this.imgdata.data[index + 1] = c[1];
-        this.imgdata.data[index + 2] = c[2];
+        this.imgdata.data[index] = c.r;
+        this.imgdata.data[index + 1] = c.g;
+        this.imgdata.data[index + 2] = c.b;
         this.imgdata.data[index + 3] = 255;
         return;
       }
