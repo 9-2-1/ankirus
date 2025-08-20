@@ -5,4 +5,4 @@ docker run -it --rm \
 	--name ankirus \
 	--workdir /ankirus \
 	anki \
-	python3 main.py
+	python3 -m ankirus
