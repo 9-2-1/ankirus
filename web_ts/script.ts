@@ -120,6 +120,18 @@ class AnkirusApp {
     return groupElement;
   }
 
+  updateDisplay() {
+    if (this.currentCard !== null) {
+      this.showGroup(false);
+      this.renderCard(this.currentCard);
+    } else {
+      this.showGroup(true);
+      this.updateGroupInfo();
+    }
+    if (this.currentGroup !== null) {
+      this.statemap.update(this.currentGroup);
+    }
+  }
   updateGroupInfo() {
     if (this.currentGroup === null) {
       return;
@@ -157,18 +169,37 @@ class AnkirusApp {
           ),
         );
       });
+    this.showGroup(true);
+  }
+
+  showGroup(show: boolean) {
+    document.getElementById("descp-groups")!.style.display = show
+      ? "block"
+      : "none";
+    document.getElementById("descp-card")!.style.display = show
+      ? "none"
+      : "block";
   }
 
   renderCard(card: Card) {
     document.getElementById("question")!.textContent = card.content[0];
-    document.getElementById("answer")!.textContent = "";
+    document.getElementById("answer")!.textContent = card.content[1];
+    document.getElementById("answer")!.style.display = "none";
+    document.getElementById("show-answer")!.style.display = "block";
   }
 
   showAnswer() {
-    document.getElementById("answer")!.textContent = "1";
+    document.getElementById("answer")!.style.display = "block";
+    document.getElementById("show-answer")!.style.display = "none";
   }
 
   initEventListeners() {
+    document
+      .getElementById("descp-card-group")!
+      .addEventListener("click", () => {
+        this.currentCard = null;
+        this.updateDisplay();
+      });
     document.getElementById("show-answer")!.addEventListener("click", () => {
       this.showAnswer();
     });
@@ -192,7 +223,11 @@ class AnkirusApp {
     });
   }
 
-  updateStatemap() {}
+  updateStatemap() {
+    if (this.currentGroup !== null) {
+      this.statemap.update(this.currentGroup);
+    }
+  }
 }
 
 class Color {
@@ -213,6 +248,10 @@ class Color {
   }
 }
 class StateMap {
+  private style: string = "";
+  private color: string = "";
+  private weight: string = "";
+  private time: string = "";
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private imgdata: ImageData;
@@ -229,6 +268,7 @@ class StateMap {
     )! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
     this.imgdata = this.ctx.createImageData(512, 512);
+    this.config_reload();
   }
   paint(x: number, y: number, i: number): void {
     const index = (x + y * 512) * 4;
@@ -283,6 +323,23 @@ class StateMap {
     this.ctx.clearRect(0, 0, 512, 512);
     this.itermap(0, 0, 256, i >= 4, i % 4, 0);
     this.ctx.putImageData(this.imgdata, 0, 0);
+  }
+  config_reload() {
+    this.style = (
+      document.getElementById("statemap-style") as HTMLSelectElement
+    ).value;
+    this.color = (
+      document.getElementById("statemap-color") as HTMLSelectElement
+    ).value;
+    this.weight = (
+      document.getElementById("statemap-weight") as HTMLSelectElement
+    ).value;
+    this.time = (document.getElementById(
+      "statemap-time",
+    ) as HTMLInputElement)!.value;
+  }
+  update(group: CardGroup) {
+    this.config_reload();
   }
 }
 
