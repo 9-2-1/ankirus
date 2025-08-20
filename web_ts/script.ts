@@ -56,7 +56,7 @@ class AnkirusApp {
 
   async loadCards(group?: string) {
     try {
-      let url = "/cards/";
+      let url = "cards/";
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
