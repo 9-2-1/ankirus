@@ -3,6 +3,7 @@ body {
   padding: 0;
   border: 0;
   overflow: hidden;
+  font-size: 20px;
 }
 
 button,
@@ -13,6 +14,11 @@ select {
 * {
   box-sizing: border-box;
   outline: 1px solid #e0e0e0;
+}
+
+svg,
+svg * {
+  outline: none;
 }
 
 #ankirus {
@@ -34,6 +40,7 @@ select {
   flex-grow: 1;
   flex-shrink: 0;
   flex-basis: 0;
+  width: 0;
 }
 
 #description {
@@ -113,7 +120,7 @@ select {
   text-align: left;
   text-wrap: wrap;
   white-space: pre-wrap;
-  height: 0;
+  overflow: auto;
 }
 
 #question img,
@@ -143,12 +150,17 @@ select {
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
-  overflow: hidden;
+  height: 0;
 }
 
-#statemap-canvas {
-  max-height: 100%;
-  max-width: 100%;
+#statemap-svg-container {
+  min-height: 0;
+  min-width: 0;
+}
+
+#statemap-svg {
+  height: 100%;
+  width: 100%;
 }
 
 #statemap-legend {

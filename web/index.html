@@ -32,8 +32,8 @@
         </div>
         <div id="descp-card">
           <div id="descp-card-group">
-            <span class="groupname">Group::Name</span>
-            <span class="cardretention">98.7%</span>
+            <span id="descp-card-groupname" class="groupname">Group::Name</span>
+            <span id="descp-card-retention" class="cardretention">98.7%</span>
           </div>
           <div id="question">Question</div>
           <button id="show-answer">Show Answer</button>
@@ -42,9 +42,26 @@
       </div>
       <div id="statemap">
         <div id="statemap-content">
-          <canvas id="statemap-canvas" width="512" height="512"></canvas>
+          <div id="statemap-svg-container">
+            <svg
+              id="statemap-svg"
+              width="512"
+              height="512"
+              viewBox="0 0 512 512"
+            >
+              <rect
+                x="0"
+                y="0"
+                width="512"
+                height="512"
+                stroke="lightgrey"
+                stroke-width="0.5"
+                fill="none"
+              />
+            </svg>
+          </div>
         </div>
-        <div id="statemap-legend">Legend</div>
+        <!-- <div id="statemap-legend">Legend</div> -->
         <div id="statemap-options">
           <select id="statemap-style">
             <option value="goldie">Goldie</option>
@@ -55,8 +72,8 @@
             <option value="stability">Stability</option>
           </select>
           <select id="statemap-weight">
-            <option value="count">Count</option>
             <option value="difficulty">Difficulty</option>
+            <option value="count">Count</option>
           </select>
           <div id="statemap-time-container">
             <input
