@@ -1,8 +1,12 @@
-from .ankidata import load_anki_data, CardGroups
-from anki.collection import Collection
 import shutil
 import os
 import logging
+import time
+
+from .ankidata import load_anki_data, CardGroups
+from .config import Config
+
+from anki.collection import Collection
 
 log = logging.getLogger(__name__)
 
@@ -36,15 +40,31 @@ async def get_anki_data_mtime(anki_db: str) -> float:
     return mtime
 
 
-async def load_anki_data_cached(anki_db: str) -> CardGroups:
+async def load_anki_data_cached(anki_db: str, config: Config) -> CardGroups:
+
     global cache_mtime, cache_groups
     db_mtime = await get_anki_data_mtime(anki_db)
-    if cache_mtime >= db_mtime:
+    current_time = time.time()
+
+    if cache_mtime >= db_mtime and current_time - cache_mtime < config.get("cache_ttl"):
         return cache_groups
-    log.info("Cache miss. Read anki data")
+
+    log.info("Cache miss or expired. Read anki data")
     collection = copy_and_read(anki_db)
     card_groups = load_anki_data(collection)
     collection.close()
-    cache_mtime = db_mtime
+
+    cleanup_temp_files()
+
+    cache_mtime = current_time
     cache_groups = card_groups
     return card_groups
+
+
+def cleanup_temp_files() -> None:
+    for file in ["tmp-collection.anki2", "tmp-collection.anki2-wal"]:
+        if os.path.exists(file):
+            try:
+                os.remove(file)
+            except OSError as e:
+                log.warning(f"Cannot delete temporary file {file}")

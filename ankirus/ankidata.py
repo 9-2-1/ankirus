@@ -1,8 +1,9 @@
-from anki.collection import Collection, QUEUE_TYPE_SUSPENDED
 from dataclasses import dataclass, field
 from typing import Literal
 import time
 import logging
+
+from anki.collection import Collection, QUEUE_TYPE_SUSPENDED
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class RetentionParams:
     decay: float
 
     def retention(self, time: float) -> float:
+        # standard FSRS retention formula
         if self.stability == 0.0:
             return 0.0
         days_elapsed = (time - self.basetime) / 86400.0
@@ -110,22 +112,14 @@ class CardGroups:
         return group
 
 
-@dataclass
-class DisplayGroups:
-    cards: list[CardStats] = field(default_factory=list)
-    groups: dict[str, "DisplayGroups"] = field(default_factory=dict)
-    # items omitted because of too small
-    stats: CardGroupStats = field(default_factory=CardGroupStats)
-
-
 def load_anki_data(collection: Collection) -> CardGroups:
     card_groups = CardGroups()
     for cid in collection.find_cards(""):
         card = collection.get_card(cid)
         cstats = collection.card_stats_data(cid)
-        D = 5.5
-        S = 0.0
-        DECAY = 0.1542
+        D = 5.5  # Default difficulty (1+10)/2
+        S = 0.0  # No memory
+        DECAY = 0.1542  # FSRS 6 default decay
         if card.memory_state is not None:
             D = card.memory_state.difficulty
             S = card.memory_state.stability

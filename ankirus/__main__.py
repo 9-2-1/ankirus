@@ -10,13 +10,13 @@ from aiohttp import web
 
 from .ankidata import GroupNotFound
 from .ankicached import load_anki_data_cached, get_anki_data_mtime
+from .config import Config
 from .nodejs import NodeJSAgent
 
+config = Config()
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-ANKI_USERPROFILE = "/anki/arigi/"
-ANKI_MEDIA_FOLDER_NAME = "media/"  # "collection.media"
 
 nodejs_agent = NodeJSAgent()
 
@@ -35,7 +35,9 @@ def strip_dight(obj: Json) -> Json:
 
 
 async def handle_cards(request: web.Request) -> web.Response:
-    cache_timestamp = await get_anki_data_mtime(ANKI_USERPROFILE + "collection.anki2")
+    cache_timestamp = await get_anki_data_mtime(
+        config.get("userprofile") + "collection.anki2"
+    )
     last_modified = time.strftime(
         "%a, %d %b %Y %H:%M:%S GMT", time.gmtime(int(cache_timestamp))
     )
@@ -49,7 +51,9 @@ async def handle_cards(request: web.Request) -> web.Response:
     headers = {"Last-Modified": last_modified, "Cache-Control": "no-cache"}
     if int(cache_timestamp) <= int(req_timestamp):
         return web.Response(status=304, headers=headers)
-    card_groups = await load_anki_data_cached(ANKI_USERPROFILE + "collection.anki2")
+    card_groups = await load_anki_data_cached(
+        config.get("userprofile") + "collection.anki2", config
+    )
     a_group = request.query.get("group")
     if a_group is not None and a_group != "":
         try:
@@ -71,19 +75,13 @@ async def handle_index(request: web.Request) -> web.FileResponse:
 
 
 async def main() -> None:
-    global ANKI_MEDIA_FOLDER_NAME
-    global ANKI_USERPROFILE
-    with open("config.json", "rb") as f:
-        config = json.load(f)
-    ANKI_MEDIA_FOLDER_NAME = config.get("media", ANKI_MEDIA_FOLDER_NAME)
-    ANKI_USERPROFILE = config.get("userprofile", ANKI_USERPROFILE)
     await nodejs_agent.agent_run()
 
     app = web.Application()
     app.router.add_get("/", handle_index)
     app.router.add_get("/cards/", handle_cards)
     app.router.add_static("/static/", "web")
-    app.router.add_static("/", ANKI_USERPROFILE + ANKI_MEDIA_FOLDER_NAME)
+    app.router.add_static("/", config.get("userprofile") + config.get("media"))
 
     runner = web.AppRunner(app)
     await runner.setup()

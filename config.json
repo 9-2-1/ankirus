@@ -1,4 +1,6 @@
 {
   "media": "collection.media\\",
-  "userprofile": "C:\\Users\\11951\\AppData\\Roaming\\Anki2\\arigi\\"
+  "userprofile": "C:\\Users\\11951\\AppData\\Roaming\\Anki2\\arigi\\",
+  "port": 24032,
+  "cache_ttl": 86400
 }

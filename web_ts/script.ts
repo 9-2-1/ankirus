@@ -466,6 +466,7 @@ class StateMap {
     layer: number,
     cardsOnly: boolean,
   ) {
+    // Squared Treemap
     pos = { ...pos };
     size = { ...size };
     let totalWeight = rectItems.reduce((acc, cur) => acc + cur.weight, 0);
