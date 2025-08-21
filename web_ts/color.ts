@@ -34,7 +34,10 @@ function colorLine(colormap: Array<[number, Color]>, value: number): Color {
   return colormap[colormap.length - 1][1];
 }
 
-const colormaps: Record<string, Record<string, Array<[number, Color]>>> = {
+const colormaps: Record<
+  "retention" | "stability",
+  Record<"goldie" | "bluesea", Array<[number, Color]>>
+> = {
   retention: {
     goldie: [
       [0, new Color(0xf0, 0xf0, 0xf0)],

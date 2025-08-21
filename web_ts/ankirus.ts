@@ -3,8 +3,9 @@ class AnkirusApp {
   public currentGroup: CardGroup | null = null;
   public currentCard: Card | null = null;
   public currentCardGroup: Array<string> = [];
-  private statemap: StateMap = new StateMap(this);
+  public options: Options = new Options();
 
+  private statemap: StateMap = new StateMap(this);
   private rootGroup: CardGroup | null = null;
 
   constructor() {
@@ -12,6 +13,7 @@ class AnkirusApp {
   }
 
   async init() {
+    this.options.syncChange();
     await this.loadCards();
     this.initEventListeners();
   }
@@ -29,7 +31,7 @@ class AnkirusApp {
       this.currentGroup = this.rootGroup;
       for (const name of this.currentGroupName) {
         if (name != "") {
-          this.currentGroup = this.currentGroup!.groups[name];
+          this.currentGroup = this.currentGroup!.groups[name]!;
         }
       }
       this.updateDescription();
@@ -69,7 +71,7 @@ class AnkirusApp {
     }
     if (subgroup !== null) {
       let groupstat = "";
-      if (this.statemap.color == "retention") {
+      if (this.options.value == "retention") {
         groupstat =
           (
             (subgroup.stats.retention_weight / subgroup.stats.weight) *
@@ -83,7 +85,7 @@ class AnkirusApp {
       groupElement.appendChild(
         this._createDiv(
           "grouptotal",
-          this.statemap.weight == "difficulty"
+          this.options.weight == "difficulty"
             ? subgroup.stats.weight.toFixed(1)
             : subgroup.stats.total.toString(),
         ),
@@ -159,7 +161,7 @@ class AnkirusApp {
     document.getElementById("descp-card-groupname")!.title =
       this.currentCardGroup.join("::");
     document.getElementById("descp-card-retention")!.innerHTML =
-      this.statemap.color == "retention"
+      this.options.value == "retention"
         ? `${(card.stats.retention * 100).toFixed(1)}%`
         : `${card.stats.stability.toFixed(1)}d`;
     document.getElementById("question")!.innerHTML = card.content[0];
@@ -178,33 +180,34 @@ class AnkirusApp {
       .getElementById("descp-card-group")!
       .addEventListener("click", () => {
         this.currentCard = null;
-        this.statemap.locked = false;
+        this.statemap.lockedItem = null;
         this.updateDescription();
         this.updateStatemap();
       });
     document.getElementById("show-answer")!.addEventListener("click", () => {
       this.showAnswer();
     });
-    document
-      .getElementById("statemap-style")!
-      .addEventListener("change", () => {
-        this.updateStatemap();
-        this.updateDescription();
-      });
-    document
-      .getElementById("statemap-color")!
-      .addEventListener("change", () => {
-        this.updateStatemap();
-        this.updateDescription();
-      });
-    document
-      .getElementById("statemap-weight")!
-      .addEventListener("change", () => {
-        this.updateStatemap();
-        this.updateDescription();
-      });
-    document.getElementById("statemap-time")!.addEventListener("input", () => {
+    document.getElementById("options-style")!.addEventListener("change", () => {
+      this.options.syncChange();
       this.updateStatemap();
+      this.updateDescription();
+    });
+    document.getElementById("options-color")!.addEventListener("change", () => {
+      this.options.syncChange();
+      this.updateStatemap();
+      this.updateDescription();
+    });
+    document
+      .getElementById("options-weight")!
+      .addEventListener("change", () => {
+        this.options.syncChange();
+        this.updateStatemap();
+        this.updateDescription();
+      });
+    document.getElementById("options-time")!.addEventListener("input", () => {
+      this.options.syncChange();
+      this.updateStatemap();
+      // no need to update description
     });
   }
 }

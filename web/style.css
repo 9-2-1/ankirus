@@ -156,6 +156,7 @@ svg * {
   flex-grow: 0;
   font-size: 20px;
   padding: 10px;
+  display: none;
 }
 
 #app > #statemap {

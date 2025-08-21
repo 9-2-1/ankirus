@@ -23,35 +23,16 @@ type RectItem =
     };
 
 class StateMap {
-  public style: "goldie" | "bluesea" = "goldie";
-  public color: "retention" | "stability" = "retention";
-  public weight: "difficulty" | "count" = "difficulty";
-  public time: number = 0;
   private svg: SVGSVGElement;
-  public locked: boolean = false;
+  private lockIndicator: SVGRectElement | null = null;
+  public lockedItem: Card | null = null;
   constructor(private app: AnkirusApp) {
     this.svg = document.getElementById(
       "statemap-svg",
     )! as unknown as SVGSVGElement;
-    this.config_reload();
   }
-  config_reload() {
-    this.style = (
-      document.getElementById("statemap-style") as HTMLSelectElement
-    ).value as "goldie" | "bluesea";
-    this.color = (
-      document.getElementById("statemap-color") as HTMLSelectElement
-    ).value as "retention" | "stability";
-    this.weight = (
-      document.getElementById("statemap-weight") as HTMLSelectElement
-    ).value as "difficulty" | "count";
-    this.time = Number(
-      (document.getElementById("statemap-time") as HTMLInputElement)!.value,
-    );
-  }
-
   update(group: CardGroup) {
-    this.config_reload();
+    this.updateLockIndicator(false);
     Array.from(this.svg.children).forEach((element) => {
       this.svg.removeChild(element);
     });
@@ -78,7 +59,7 @@ class StateMap {
         .forEach((card) => {
           let weight = 0;
           let value = 0;
-          switch (this.weight) {
+          switch (this.app.options.weight) {
             case "difficulty":
               weight = card.stats.weight;
               break;
@@ -86,7 +67,7 @@ class StateMap {
               weight = 1;
               break;
           }
-          switch (this.color) {
+          switch (this.app.options.value) {
             case "retention":
               value = card.stats.retention;
               break;
@@ -99,7 +80,7 @@ class StateMap {
     } else {
       // groups and an optional "cards" group
       let value = 0;
-      switch (this.color) {
+      switch (this.app.options.value) {
         case "retention":
           value = group.stats.retention_weight / group.stats.weight;
           break;
@@ -112,7 +93,7 @@ class StateMap {
         .forEach(([key, subgroup]) => {
           rectItems.push({
             weight:
-              this.weight == "difficulty"
+              this.app.options.weight == "difficulty"
                 ? subgroup.stats.weight
                 : subgroup.stats.total,
             mode: "group",
@@ -255,41 +236,82 @@ class StateMap {
     rect.setAttribute("stroke-width", "0.5");
     rect.setAttribute("fill", "lightgrey");
     if (card !== null) {
-      let color = colorLine(colormaps[this.color][this.style], value);
+      let color = colorLine(
+        colormaps[this.app.options.value][this.app.options.style],
+        value,
+      );
       rect.setAttribute("fill", color.toString());
       rect.setAttribute(
         "stroke",
         color.interpolate(new Color(0, 0, 0), 0.05).toString(),
       );
       rect.addEventListener("mouseover", () => {
-        if (!this.locked) {
+        if (this.lockedItem === null) {
           this.app.currentCard = card;
           this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
         }
       });
       rect.addEventListener("mouseout", () => {
-        if (!this.locked) {
+        if (this.lockedItem === null) {
           this.app.currentCard = null;
           this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
         }
       });
+      const pos0 = { ...pos };
+      const size0 = { ...size };
       rect.addEventListener("click", () => {
-        if (this.app.currentCard !== card || !this.locked) {
+        if (this.lockedItem !== card) {
           this.app.currentCard = card;
           this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
-          this.locked = true;
+          this.lockedItem = card;
+          this.updateLockIndicator(true, pos0, size0);
         } else {
           this.app.currentCard = null;
           this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
-          this.locked = false;
+          this.lockedItem = null;
+          this.updateLockIndicator(false);
         }
       });
     }
     this.svg.appendChild(rect);
+  }
+  updateLockIndicator(locked: false): void;
+  updateLockIndicator(
+    locked: true,
+    pos: { x: number; y: number },
+    size: { x: number; y: number },
+  ): void;
+  updateLockIndicator(
+    locked: boolean,
+    pos?: { x: number; y: number },
+    size?: { x: number; y: number },
+  ) {
+    if (this.lockIndicator !== null) {
+      this.svg.removeChild(this.lockIndicator);
+      this.lockIndicator = null;
+    }
+    if (locked) {
+      this.lockIndicator = this._createLockIndicator(pos!, size!);
+    }
+  }
+  _createLockIndicator(
+    pos: { x: number; y: number },
+    size: { x: number; y: number },
+  ): SVGRectElement {
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", pos.x.toFixed(1).toString());
+    rect.setAttribute("y", pos.y.toFixed(1).toString());
+    rect.setAttribute("width", size.x.toFixed(1).toString());
+    rect.setAttribute("height", size.y.toFixed(1).toString());
+    rect.setAttribute("stroke", "#00aaff");
+    rect.setAttribute("stroke-width", "3");
+    rect.setAttribute("fill", "none");
+    this.svg.appendChild(rect);
+    return rect;
   }
   _createBorder(
     pos: { x: number; y: number },
