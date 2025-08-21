@@ -2,7 +2,9 @@ body {
   margin: 0;
   padding: 0;
   border: 0;
-  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  /* overflow: hidden; */
   font-size: 20px;
 }
 
@@ -23,106 +25,125 @@ svg * {
   outline: none;
 }
 
-#ankirus {
-  position: relative;
-  height: 100vh;
-  width: 100vw;
+#app {
   display: flex;
   flex-direction: row;
   align-items: stretch;
+  height: 100%;
+  width: 100%;
 }
 
 @media screen and (max-width: 400px) {
-  #ankirus {
+  #app {
     flex-direction: column;
   }
 }
 
-#ankirus > * {
+#app > * {
   flex-grow: 1;
-  flex-shrink: 0;
   flex-basis: 0;
-  width: 0;
+  min-width: 0;
+  min-height: 0;
 }
 
-#description {
+#app > #description {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   align-items: stretch;
 }
 
 #description > * {
   flex-grow: 1;
+  flex-basis: 0;
+  min-height: 0;
 }
 
-#descp-groups {
-  overflow: auto;
+#description > #descp-groups {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow-y: auto;
 }
 
-.descp-group {
+#descp-groups > .descp-group {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
   align-items: stretch;
 }
 
-.groupindent {
+.descp-group > .groupindent {
   white-space: pre;
   color: #334155;
   cursor: pointer;
 }
 
-.groupname {
+.descp-group > .groupname {
   flex-grow: 1;
   white-space: pre;
   color: #334155;
   text-decoration: underline;
   cursor: pointer;
-  width: 0;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.grouptotal {
-  width: 70px;
+.descp-group > .grouptotal {
+  flex-basis: 70px;
   text-align: center;
   color: #3b82f6;
 }
 
-.groupretention {
-  width: 70px;
+.descp-group > .groupretention {
+  flex-basis: 70px;
   text-align: center;
 }
 
-#descp-card {
+#description > #descp-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
   align-items: stretch;
   overflow: auto;
 }
 
-#descp-card-group {
+#descp-card > #descp-card-group {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
   align-items: stretch;
 }
 
-.cardretention {
-  width: 70px;
+#descp-card-group > .groupname {
+  flex-grow: 1;
+  white-space: pre;
+  color: #334155;
+  text-decoration: underline;
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#descp-card-group > .cardretention {
+  flex-basis: 70px;
   text-align: center;
 }
 
-#question,
-#answer {
+#descp-card > #descp-card-content {
   flex-grow: 1;
-  align-content: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow-y: auto;
+}
+
+#descp-card-content > #question,
+#descp-card-content > #answer {
   text-align: left;
   text-wrap: wrap;
   white-space: pre-wrap;
-  overflow: auto;
+  padding: 10px;
 }
 
 #question img,
@@ -131,52 +152,55 @@ svg * {
   max-height: 100%;
 }
 
-#show-answer {
-  align-self: center;
+#descp-card-content > #show-answer {
+  flex-grow: 0;
+  font-size: 20px;
+  padding: 10px;
 }
 
-#statemap {
+#app > #statemap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+#statemap > #statemap-content {
+  flex-grow: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: stretch;
+}
+
+#statemap-content > #statemap-svg-container {
+  flex-grow: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   align-items: stretch;
 }
 
-#statemap > * {
-  flex-grow: 0;
-}
-
-#statemap-content {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-  height: 0;
-}
-
-#statemap-svg-container {
-  min-height: 0;
-  min-width: 0;
-}
-
-#statemap-svg {
+#statemap-svg-container > #statemap-svg {
   height: 100%;
   width: 100%;
 }
 
-#statemap-legend {
+#statemap > #statemap-legend {
+  flex-grow: 0;
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
   align-items: stretch;
   flex-wrap: wrap;
 }
 
-#statemap-options {
+#statemap > #statemap-options {
+  flex-grow: 0;
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
   flex-wrap: wrap;
   align-items: stretch;
 }
@@ -185,10 +209,9 @@ svg * {
   flex-grow: 1;
 }
 
-#statemap-time-container {
+#statemap-options > #statemap-time-container {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
   align-items: stretch;
 }
 

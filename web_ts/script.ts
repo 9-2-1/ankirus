@@ -107,19 +107,27 @@ class AnkirusApp {
       });
     }
     if (subgroup !== null) {
-      const groupretention = (
-        (subgroup.stats.retention_weight / subgroup.stats.weight) *
-        100
-      ).toFixed(1);
+      let groupstat = "";
+      if (this.statemap.color == "retention") {
+        groupstat =
+          (
+            (subgroup.stats.retention_weight / subgroup.stats.weight) *
+            100
+          ).toFixed(1) + "%";
+      } else {
+        groupstat =
+          (subgroup.stats.stability_weight / subgroup.stats.weight).toFixed(1) +
+          "d";
+      }
       groupElement.appendChild(
         this._createDiv(
           "grouptotal",
-          `${this.statemap.weight == "difficulty" ? subgroup.stats.total : subgroup.stats.weight}`,
+          this.statemap.weight == "difficulty"
+            ? subgroup.stats.weight.toFixed(1)
+            : subgroup.stats.total.toString(),
         ),
       );
-      groupElement.appendChild(
-        this._createDiv("groupretention", `${groupretention}%`),
-      );
+      groupElement.appendChild(this._createDiv("groupretention", groupstat));
     }
     return groupElement;
   }
@@ -177,7 +185,7 @@ class AnkirusApp {
 
   showGroup(show: boolean) {
     document.getElementById("descp-groups")!.style.display = show
-      ? "block"
+      ? "flex"
       : "none";
     document.getElementById("descp-card")!.style.display = show
       ? "none"
@@ -187,8 +195,12 @@ class AnkirusApp {
   renderCard(card: Card) {
     document.getElementById("descp-card-groupname")!.innerHTML =
       this.currentCardGroup.join("::");
+    document.getElementById("descp-card-groupname")!.title =
+      this.currentCardGroup.join("::");
     document.getElementById("descp-card-retention")!.innerHTML =
-      `${(card.stats.retention * 100).toFixed(1)}%`;
+      this.statemap.color == "retention"
+        ? `${(card.stats.retention * 100).toFixed(1)}%`
+        : `${card.stats.stability.toFixed(1)}d`;
     document.getElementById("question")!.innerHTML = card.content[0];
     document.getElementById("answer")!.innerHTML = card.content[1];
     document.getElementById("answer")!.style.display = "none";
@@ -216,16 +228,19 @@ class AnkirusApp {
       .getElementById("statemap-style")!
       .addEventListener("change", () => {
         this.updateStatemap();
+        this.updateDescription();
       });
     document
       .getElementById("statemap-color")!
       .addEventListener("change", () => {
         this.updateStatemap();
+        this.updateDescription();
       });
     document
       .getElementById("statemap-weight")!
       .addEventListener("change", () => {
         this.updateStatemap();
+        this.updateDescription();
       });
     document.getElementById("statemap-time")!.addEventListener("input", () => {
       this.updateStatemap();
@@ -502,7 +517,6 @@ class StateMap {
       let size0 = { ...size };
       YL = (rowWeight / totalWeight) * size[Y];
       size0[Y] = YL;
-      console.log(i, j);
       for (let k = i; k < j; k++) {
         const item2 = rectItems[k];
         XL = (item2.weight / rowWeight) * size[X];
