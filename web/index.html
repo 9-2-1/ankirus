@@ -8,6 +8,9 @@
     />
     <title>ankirus</title>
     <link rel="stylesheet" href="static/style.css?t=20250821083541" />
+    <script src="static/ankirus.js?t=20250821083541"></script>
+    <script src="static/color.js?t=20250821083541"></script>
+    <script src="static/statemap.js?t=20250821083541"></script>
     <script src="static/script.js?t=20250821083541"></script>
   </head>
   <body>
@@ -49,35 +52,54 @@
                 height="512"
                 stroke="lightgrey"
                 stroke-width="0.5"
-                fill="none"
+                fill="lightgrey"
               />
             </svg>
           </div>
         </div>
-        <!-- <div id="statemap-legend">Legend</div> -->
-        <div id="statemap-options">
-          <select id="statemap-style">
+        <div id="statemap-legend">
+          <div id="statemap-legend-svg-container">
+            <svg
+              id="statemap-legend-svg"
+              width="512"
+              height="32"
+              viewBox="0 0 512 32"
+            >
+              <rect
+                x="0"
+                y="0"
+                width="512"
+                height="32"
+                stroke="lightgrey"
+                stroke-width="0.5"
+                fill="lightgrey"
+              />
+            </svg>
+          </div>
+        </div>
+        <div id="options">
+          <select id="options-style">
             <option value="goldie">Goldie</option>
             <option value="bluesea">Bluesea</option>
           </select>
-          <select id="statemap-color">
+          <select id="options-value">
             <option value="retention">Retention</option>
             <option value="stability">Stability</option>
           </select>
-          <select id="statemap-weight">
+          <select id="options-weight">
             <option value="difficulty">Difficulty</option>
             <option value="count">Count</option>
           </select>
-          <div id="statemap-time-container">
+          <div id="options-time-container">
             <input
               type="range"
-              id="statemap-time"
+              id="options-time"
               min="0"
               max="30"
               step="1"
               value="0"
             />
-            <label for="statemap-time">(days)</label>
+            <label for="options-time" id="options-time-value">0d</label>
           </div>
         </div>
       </div>
