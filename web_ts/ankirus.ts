@@ -70,17 +70,20 @@ class AnkirusApp {
       });
     }
     if (subgroup !== null) {
+      let value = 0;
       let groupstat = "";
-      if (this.options.value == "retention") {
-        groupstat =
-          (
-            (subgroup.stats.retention_weight / subgroup.stats.weight) *
-            100
-          ).toFixed(1) + "%";
-      } else {
-        groupstat =
-          (subgroup.stats.stability_weight / subgroup.stats.weight).toFixed(1) +
-          "d";
+      let groupcolor: Color = new Color(0, 0, 0);
+      const colorline = colormaps[this.options.value][this.options.style];
+      switch (this.options.value) {
+        case "retention":
+          value = subgroup.stats.retention_weight / subgroup.stats.weight;
+          groupstat = (value * 100).toFixed(1) + "%";
+
+          break;
+        case "stability":
+          value = subgroup.stats.stability_weight / subgroup.stats.weight;
+          groupstat = value.toFixed(1) + "d";
+          break;
       }
       groupElement.appendChild(
         this._createDiv(
@@ -90,7 +93,11 @@ class AnkirusApp {
             : subgroup.stats.total.toString(),
         ),
       );
-      groupElement.appendChild(this._createDiv("groupretention", groupstat));
+      const statElement = this._createDiv("groupretention", groupstat);
+      statElement.style.color = colorLine(colorline, value)
+        .interpolate(new Color(0, 0, 0), 0.2)
+        .toString();
+      groupElement.appendChild(statElement);
     }
     return groupElement;
   }
@@ -156,14 +163,29 @@ class AnkirusApp {
   }
 
   renderCard(card: Card) {
-    document.getElementById("descp-card-groupname")!.innerHTML =
+    const colorline = colormaps[this.options.value][this.options.style];
+    document.getElementById("descp-card-groupname")!.textContent =
       this.currentCardGroup.join("::");
     document.getElementById("descp-card-groupname")!.title =
       this.currentCardGroup.join("::");
-    document.getElementById("descp-card-retention")!.innerHTML =
-      this.options.value == "retention"
-        ? `${(card.stats.retention * 100).toFixed(1)}%`
-        : `${card.stats.stability.toFixed(1)}d`;
+    switch (this.options.value) {
+      case "retention":
+        document.getElementById("descp-card-retention")!.textContent =
+          `${(card.stats.retention * 100).toFixed(1)}%`;
+        document.getElementById("descp-card-retention")!.style.color =
+          colorLine(colorline, card.stats.retention)
+            .interpolate(new Color(0, 0, 0), 0.2)
+            .toString();
+        break;
+      case "stability":
+        document.getElementById("descp-card-retention")!.textContent =
+          `${card.stats.stability.toFixed(1)}d`;
+        document.getElementById("descp-card-retention")!.style.color =
+          colorLine(colorline, card.stats.stability)
+            .interpolate(new Color(0, 0, 0), 0.2)
+            .toString();
+        break;
+    }
     document.getElementById("question")!.innerHTML = card.content[0];
     document.getElementById("answer")!.innerHTML = card.content[1];
     document.getElementById("answer")!.style.display = "none";
@@ -192,7 +214,7 @@ class AnkirusApp {
       this.updateStatemap();
       this.updateDescription();
     });
-    document.getElementById("options-color")!.addEventListener("change", () => {
+    document.getElementById("options-value")!.addEventListener("change", () => {
       this.options.syncChange();
       this.updateStatemap();
       this.updateDescription();

@@ -24,11 +24,15 @@ type RectItem =
 
 class StateMap {
   private svg: SVGSVGElement;
+  private legend_svg: SVGSVGElement;
   private lockIndicator: SVGRectElement | null = null;
   public lockedItem: Card | null = null;
   constructor(private app: AnkirusApp) {
     this.svg = document.getElementById(
       "statemap-svg",
+    )! as unknown as SVGSVGElement;
+    this.legend_svg = document.getElementById(
+      "statemap-legend-svg",
     )! as unknown as SVGSVGElement;
   }
   update(group: CardGroup) {
@@ -37,6 +41,57 @@ class StateMap {
       this.svg.removeChild(element);
     });
     this.drawGroup(group, [], { x: 0, y: 0 }, { x: 512, y: 512 }, 5);
+    this.updateLegend();
+  }
+  updateLegend() {
+    Array.from(this.legend_svg.children).forEach((element) => {
+      this.legend_svg.removeChild(element);
+    });
+    const colorline = colormaps[this.app.options.value][this.app.options.style];
+    const max = colorline[colorline.length - 1][0];
+    for (let a = 0; a < 512; a++) {
+      const v = (a / 512) * max;
+      const rect = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "rect",
+      );
+      rect.setAttribute("x", a.toString());
+      rect.setAttribute("y", "0");
+      rect.setAttribute("width", "1");
+      rect.setAttribute("height", "16");
+      const color = colorLine(colorline, v).toString();
+      rect.setAttribute("fill", color);
+      rect.setAttribute("stroke", color);
+      rect.setAttribute("stroke-width", "0.5");
+      this.legend_svg.appendChild(rect);
+    }
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", "0");
+    rect.setAttribute("y", "0");
+    rect.setAttribute("width", "512");
+    rect.setAttribute("height", "16");
+    rect.setAttribute("fill", "none");
+    rect.setAttribute("stroke", "white");
+    rect.setAttribute("stroke-width", "5");
+    this.legend_svg.appendChild(rect);
+    for (let i = 0; i < colorline.length; i++) {
+      const v = colorline[i][0];
+      const text = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text",
+      );
+      text.setAttribute("x", ((v / max) * 512).toString());
+      text.setAttribute("y", "26");
+      const color = colorLine(colorline, v)
+        .interpolate(new Color(0, 0, 0), 0.2)
+        .toString();
+      text.setAttribute("font-size", "12");
+      text.setAttribute("font-weight", "bold");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("fill", color);
+      text.textContent = v.toString();
+      this.legend_svg.appendChild(text);
+    }
   }
   drawGroup(
     group: CardGroup,
