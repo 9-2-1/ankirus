@@ -226,10 +226,5 @@ class AnkirusApp {
         this.updateStatemap();
         this.updateDescription();
       });
-    document.getElementById("options-time")!.addEventListener("input", () => {
-      this.options.syncChange();
-      this.updateStatemap();
-      // no need to update description
-    });
   }
 }

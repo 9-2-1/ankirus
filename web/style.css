@@ -229,13 +229,3 @@ svg * {
 #options > * {
   flex-grow: 1;
 }
-
-#options > #options-time-container {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-}
-
-#options-time-container > input {
-  flex-grow: 1;
-}
