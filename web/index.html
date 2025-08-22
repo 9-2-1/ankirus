@@ -7,16 +7,26 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>ankirus</title>
-    <link rel="stylesheet" href="static/style.css?t=20250822161728" />
-
+    <link rel="stylesheet" href="static/style.css?t=20250822173617" />
     <script src="static/oklab.js?t=20250822165440"></script>
     <script src="static/color.js?t=20250822165440"></script>
-
     <script src="static/options.js?t=20250822161728"></script>
     <script src="static/statemap.js?t=20250822161728"></script>
-    <script src="static/ankirus.js?t=20250822161728"></script>
-
+    <script src="static/ankirus.js?t=20250822172538"></script>
     <script src="static/script.js?t=20250822161728"></script>
+    <script>
+      MathJax = {
+        startup: {
+          elements: ["#question", "#answer"],
+        },
+      };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.0.0/tex-mml-chtml.min.js"
+      integrity="sha512-yxTB34XQUKlyuz73upeDrZ91/tbZW/YAURVWL3s+09bEWdmORQzUZwSKyBIRxSeHuSwh1aOKEffn2/D65kwyYg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
   </head>
   <body>
     <div id="app">
@@ -35,9 +45,9 @@
             <span id="descp-card-retention" class="cardretention">--.--</span>
           </div>
           <div id="descp-card-content">
-            <div id="question">--------</div>
+            <div id="question">\(Ax^2+Bx+C=0\)</div>
             <button id="show-answer">Show Answer</button>
-            <div id="answer">--------</div>
+            <div id="answer">\(\frac{-B\pm\sqrt{B^2-4AC}}{2A}\)</div>
           </div>
         </div>
       </div>

@@ -284,10 +284,13 @@ class AnkirusApp {
     )
       .interpolate(Color.rgb(0, 0, 0), 0.2)
       .toString();
+    const to_typeset = ["#question", "#answer"];
+    MathJax.typesetClear(to_typeset);
     document.getElementById("question")!.innerHTML = card.front;
     document.getElementById("answer")!.innerHTML = card.back;
     document.getElementById("answer")!.style.display = "none";
     document.getElementById("show-answer")!.style.display = "block";
+    MathJax.typeset(to_typeset);
   }
 
   showAnswer() {
