@@ -2,7 +2,6 @@ from asyncio import subprocess as subproc, Event
 import asyncio
 import json
 from typing import Optional, Any, TypedDict, cast
-from base64 import b64decode
 import logging
 
 log = logging.getLogger(__name__)

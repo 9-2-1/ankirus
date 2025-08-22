@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, Callable, Awaitable
 import logging
 
-from anki.collection import Collection, QUEUE_TYPE_SUSPENDED, SearchNode
+from anki.collection import Collection, QUEUE_TYPE_SUSPENDED
 
 log = logging.getLogger(__name__)
 
