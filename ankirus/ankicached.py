@@ -26,7 +26,7 @@ class AnkiCachedReader:
         self.config = config
         self.collection: Optional[Collection] = None
         self.cache_mtime: float = 0.0
-        self.cards: list[Card] = []
+        self.cards: Optional[list[Card]] = None
         self.lock = asyncio.Lock()
 
     async def read(
@@ -36,7 +36,7 @@ class AnkiCachedReader:
             db_mtime = get_anki_data_mtime(self.anki_db)
             current_time = time.time()
             if (
-                self.collection is None
+                self.cards is None
                 or self.cache_mtime < db_mtime
                 or current_time - self.cache_mtime > self.config.get("cache_ttl")
             ):

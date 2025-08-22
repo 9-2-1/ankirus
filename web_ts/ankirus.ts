@@ -42,6 +42,8 @@ class AnkirusApp {
       }
       this.curGroup = this.curGroup.groups.get(name) ?? null;
     }
+    this.updateDescription();
+    this.updateStatemap();
   }
 
   _retention(card: Card, timestamp: number) {
@@ -86,7 +88,7 @@ class AnkirusApp {
           break;
       }
       group.st_weight += card.st_weight;
-      group.st_value_weight += card.st_value;
+      group.st_value_weight += card.st_value * card.st_weight;
     }
   }
 
