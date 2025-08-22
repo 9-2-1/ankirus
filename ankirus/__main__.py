@@ -135,10 +135,17 @@ class App:
 
 async def main() -> None:
     parser = argparse.ArgumentParser(description="ankirus")
+    parser.add_argument("--test", action="store_true")
     parser.add_argument("--config", type=str, default="config.json", help="config file")
     args = parser.parse_args()
     config = Config(args.config)
 
+    if args.test:
+        ankireader = AnkiCachedReader(
+            config.get("userprofile") + "collection.anki2", config
+        )
+        cards = await ankireader.read()
+        return
     app = App(config)
 
     await app.run()

@@ -45,7 +45,14 @@ async def load_anki_data(
             front = await sanitize(front)
             back = await sanitize(back)
 
-        time = cstats.latest_review
+        # RESCHEDULED: RevlogEntry._ReviewKind.ValueType  # 5
+        RESCHEDULED = 5
+        time = 0
+        for revlog in reversed(cstats.revlog):
+            if revlog.review_kind != RESCHEDULED:
+                time = revlog.time
+                break
+
         difficulty = 5.5  # Default difficulty (1+10)/2
         stability = 0.0  # No memory
         decay = 0.1542  # FSRS 6 default decay
