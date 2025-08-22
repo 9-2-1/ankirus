@@ -1,12 +1,3 @@
-const oklchConverter = useOklchConverter();
-
-function m360(x: number) {
-  return (x + 360) % 360;
-}
-function r360(x: number) {
-  return ((x + 180) % 360) - 180;
-}
-
 class Color {
   constructor(
     public r: number,
@@ -20,18 +11,18 @@ class Color {
   interpolate(other: Color, t: number): Color {
     const {
       l: l1,
-      c: c1,
-      h: h1,
-    } = oklchConverter.rgbToOklch({ r: this.r, g: this.g, b: this.b });
+      a: a1,
+      b: b1,
+    } = convertRgbToOklab({ r: this.r, g: this.g, b: this.b });
     const {
       l: l2,
-      c: c2,
-      h: h2,
-    } = oklchConverter.rgbToOklch({ r: other.r, g: other.g, b: other.b });
-    const { r, g, b } = oklchConverter.oklchToRGB({
-      l: m360(l1 + r360(l2 - l1) * t),
-      c: c1 + (c2 - c1) * t,
-      h: h1 + (h2 - h1) * t,
+      a: a2,
+      b: b2,
+    } = convertRgbToOklab({ r: other.r, g: other.g, b: other.b });
+    const { r, g, b } = convertOklabToRgb({
+      l: l1 + (l2 - l1) * t,
+      a: a1 + (a2 - a1) * t,
+      b: b1 + (b2 - b1) * t,
     });
     return new Color(r, g, b);
   }
