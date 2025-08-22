@@ -68,10 +68,31 @@ function convertLrgbToOklab({ r, g, b }: { r: number; g: number; b: number }) {
 }
 
 function convertRgbToOklab({ r, g, b }: { r: number; g: number; b: number }) {
-  const lrgb = convertRgbToLrgb({ r, g, b });
-  return convertLrgbToOklab(lrgb);
+  const V = convertRgbToLrgb({ r, g, b });
+  return convertLrgbToOklab(V);
 }
 function convertOklabToRgb({ l, a, b }: { l: number; a: number; b: number }) {
-  const lrgb = convertOklabToLrgb({ l, a, b });
-  return convertLrgbToRgb(lrgb);
+  const V = convertOklabToLrgb({ l, a, b });
+  return convertLrgbToRgb(V);
+}
+
+// OKLch
+function convertOklabToOklch({ l, a, b }: { l: number; a: number; b: number }) {
+  const c = Math.sqrt(a * a + b * b);
+  const h = Math.atan2(b, a) * (180 / Math.PI);
+  return { l: l, c: c, h: h };
+}
+function convertOklchToOklab({ l, c, h }: { l: number; c: number; h: number }) {
+  const a = c * Math.cos((h * Math.PI) / 180);
+  const b = c * Math.sin((h * Math.PI) / 180);
+  return { l: l, a: a, b: b };
+}
+
+function convertRgbToOklch({ r, g, b }: { r: number; g: number; b: number }) {
+  const V = convertRgbToOklab({ r, g, b });
+  return convertOklabToOklch(V);
+}
+function convertOklchToRgb({ l, c, h }: { l: number; c: number; h: number }) {
+  const V = convertOklchToOklab({ l, c, h });
+  return convertOklabToRgb(V);
 }

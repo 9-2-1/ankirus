@@ -1,3 +1,10 @@
+function d360(h: number) {
+  return h - 360 * Math.floor(h / 360 + 0.5);
+}
+function m360(h: number) {
+  // no % because h<0
+  return h - 360 * Math.floor(h / 360);
+}
 class Color {
   constructor(
     public r: number,
@@ -55,10 +62,10 @@ const colormaps: Record<
   retention: {
     goldie: [
       [0, Color.rgb(240, 240, 240)],
-      [0.8, Color.rgb(246, 198, 197)],
-      [0.9, Color.rgb(211, 209, 110)],
-      [0.95, Color.rgb(65, 200, 110)],
-      [1.0, Color.rgb(47, 155, 249)],
+      [0.8, Color.rgb(255, 207, 207)],
+      [0.9, Color.rgb(222, 219, 0)],
+      [0.95, Color.rgb(0, 222, 74)],
+      [1.0, Color.rgb(0, 170, 255)],
     ],
     bluesea: [
       [0, Color.rgb(240, 240, 240)],
@@ -69,10 +76,10 @@ const colormaps: Record<
   stability: {
     goldie: [
       [0, Color.rgb(240, 240, 240)],
-      [1, Color.rgb(246, 198, 197)],
-      [3, Color.rgb(211, 209, 110)],
-      [7, Color.rgb(65, 200, 110)],
-      [15, Color.rgb(47, 155, 249)],
+      [1, Color.rgb(255, 207, 207)],
+      [3, Color.rgb(222, 219, 0)],
+      [7, Color.rgb(0, 222, 74)],
+      [15, Color.rgb(0, 170, 255)],
     ],
     bluesea: [
       [0, Color.rgb(240, 240, 240)],
@@ -83,10 +90,10 @@ const colormaps: Record<
   "stability-0": {
     goldie: [
       [0, Color.rgb(240, 240, 240)],
-      [1, Color.rgb(246, 198, 197)],
-      [3, Color.rgb(211, 209, 110)],
-      [7, Color.rgb(65, 200, 110)],
-      [15, Color.rgb(47, 155, 249)],
+      [1, Color.rgb(255, 207, 207)],
+      [3, Color.rgb(222, 219, 0)],
+      [7, Color.rgb(0, 222, 74)],
+      [15, Color.rgb(0, 170, 255)],
     ],
     bluesea: [
       [0, Color.rgb(240, 240, 240)],
