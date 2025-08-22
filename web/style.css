@@ -81,7 +81,7 @@ svg * {
   cursor: pointer;
 }
 
-.descp-group > .groupname {
+.groupname {
   flex-grow: 1;
   white-space: pre;
   color: #334155;
@@ -92,12 +92,12 @@ svg * {
   text-overflow: ellipsis;
 }
 
-.descp-group > .grouptotal {
+.groupweight {
   flex-basis: 70px;
   text-align: center;
 }
 
-.descp-group > .groupretention {
+.groupvalue {
   flex-basis: 70px;
   font-weight: bold;
   font-size: 22px;
@@ -115,24 +115,6 @@ svg * {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-}
-
-#descp-card-group > .groupname {
-  flex-grow: 1;
-  white-space: pre;
-  color: #334155;
-  text-decoration: underline;
-  cursor: pointer;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-#descp-card-group > .cardretention {
-  flex-basis: 70px;
-  font-weight: bold;
-  font-size: 22px;
-  text-align: center;
 }
 
 #descp-card > #descp-card-content {

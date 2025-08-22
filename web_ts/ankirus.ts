@@ -61,6 +61,7 @@ class AnkirusApp {
   }
 
   updateGroupStat(group: CardGroup) {
+    const curTime = Date.now() / 1000;
     group.st_weight = 0;
     group.st_value_weight = 0;
     group.groups.forEach((subgroup) => {
@@ -79,10 +80,10 @@ class AnkirusApp {
       }
       switch (this.options.value) {
         case "retention":
-          card.st_value = this._retention(card, Date.now() / 1000);
+          card.st_value = this._retention(card, curTime);
           break;
         case "stability":
-          card.st_value = card.stability;
+          card.st_value = card.stability - (curTime - card.time) / 86400;
           break;
       }
       group.st_weight += card.st_weight;
@@ -184,8 +185,8 @@ class AnkirusApp {
           str_value = value.toFixed(1) + "d";
           break;
       }
-      groupElement.appendChild(this._createDiv("grouptotal", str_weight));
-      const statElement = this._createDiv("groupretention", str_value);
+      groupElement.appendChild(this._createDiv("groupweight", str_weight));
+      const statElement = this._createDiv("groupvalue", str_value);
       statElement.style.color = colorLine(colorline, value)
         .interpolate(Color.rgb(0, 0, 0), 0.2)
         .toString();
@@ -265,10 +266,22 @@ class AnkirusApp {
   renderCard(card: Card) {
     const colorline = colormaps[this.options.value][this.options.style];
     document.getElementById("descp-card-groupname")!.textContent =
-      this.currentCard!.group.join("::");
+      card.group.join("::");
     document.getElementById("descp-card-groupname")!.title =
-      this.currentCard!.group.join("::");
+      card.group.join("::");
+    let str_weight = "";
     let str_value = "";
+    switch (this.options.weight) {
+      case "count":
+        str_weight = "";
+        document.getElementById("descp-card-weight")!.style.display = "none";
+        break;
+      case "difficulty":
+        str_weight = card.st_weight.toFixed(1);
+        document.getElementById("descp-card-weight")!.textContent = str_weight;
+        document.getElementById("descp-card-weight")!.style.display = "block";
+        break;
+    }
     switch (this.options.value) {
       case "retention":
         str_value = (card.st_value * 100).toFixed(1) + "%";
@@ -277,8 +290,8 @@ class AnkirusApp {
         str_value = card.st_value.toFixed(1) + "d";
         break;
     }
-    document.getElementById("descp-card-retention")!.textContent = str_value;
-    document.getElementById("descp-card-retention")!.style.color = colorLine(
+    document.getElementById("descp-card-value")!.textContent = str_value;
+    document.getElementById("descp-card-value")!.style.color = colorLine(
       colorline,
       card.st_value,
     )
