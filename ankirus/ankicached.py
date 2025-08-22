@@ -45,10 +45,10 @@ class AnkiCachedReader:
                 log.info("Cache miss or expired. Read anki data")
                 self.collection = copy_and_read(self.anki_db, self.config.get("tmp_db"))
                 self.cards = await load_anki_data(self.collection, sanitize=sanitize)
-                # self.collection.close()  # keep opened for future?
-                # self.collection = None
+                self.collection.close()  # keep opened for future?
+                self.collection = None
                 self.cache_mtime = current_time
-                # cleanup_temp_files(self.config.get("tmp_db"))
+                cleanup_temp_files(self.config.get("tmp_db"))
         return self.cards
 
     def close(self) -> None:
