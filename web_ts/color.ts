@@ -1,18 +1,39 @@
+const oklchConverter = useOklchConverter();
+
+function m360(x: number) {
+  return (x + 360) % 360;
+}
+function r360(x: number) {
+  return ((x + 180) % 360) - 180;
+}
+
 class Color {
   constructor(
     public r: number,
     public g: number,
     public b: number,
   ) {}
-  RGB(): [number, number, number] {
-    return [this.r, this.g, this.b];
+  // make vscode happy rgb(0, 128, 255)
+  static rgb(r: number, g: number, b: number) {
+    return new Color(r, g, b);
   }
   interpolate(other: Color, t: number): Color {
-    return new Color(
-      this.r + (other.r - this.r) * t,
-      this.g + (other.g - this.g) * t,
-      this.b + (other.b - this.b) * t,
-    );
+    const {
+      l: l1,
+      c: c1,
+      h: h1,
+    } = oklchConverter.rgbToOklch({ r: this.r, g: this.g, b: this.b });
+    const {
+      l: l2,
+      c: c2,
+      h: h2,
+    } = oklchConverter.rgbToOklch({ r: other.r, g: other.g, b: other.b });
+    const { r, g, b } = oklchConverter.oklchToRGB({
+      l: m360(l1 + r360(l2 - l1) * t),
+      c: c1 + (c2 - c1) * t,
+      h: h1 + (h2 - h1) * t,
+    });
+    return new Color(r, g, b);
   }
   toString(): string {
     return `rgb(${this.r}, ${this.g}, ${this.b})`;
@@ -34,36 +55,38 @@ function colorLine(colormap: Array<[number, Color]>, value: number): Color {
   return colormap[colormap.length - 1][1];
 }
 
+const black = Color.rgb(0, 0, 0);
+const white = Color.rgb(255, 255, 255);
 const colormaps: Record<
   "retention" | "stability",
   Record<"goldie" | "bluesea", Array<[number, Color]>>
 > = {
   retention: {
     goldie: [
-      [0, new Color(0xf0, 0xf0, 0xf0)],
-      [0.8, new Color(0xe8, 0xbf, 0xbf)],
-      [0.9, new Color(0xff, 0xf7, 0x85)],
-      [0.95, new Color(0x59, 0xe1, 0x5e)],
-      [1.0, new Color(0x00, 0x88, 0xff)],
+      [0, Color.rgb(240, 240, 240)],
+      [0.8, Color.rgb(246, 198, 197)],
+      [0.9, Color.rgb(211, 209, 110)],
+      [0.95, Color.rgb(65, 200, 110)],
+      [1.0, Color.rgb(47, 155, 249)],
     ],
     bluesea: [
-      [0, new Color(0xff, 0xff, 0xff)],
-      [0.9, new Color(0xc0, 0xe0, 0xff)],
-      [1, new Color(0x00, 0x88, 0xff)],
+      [0, Color.rgb(240, 240, 240)],
+      [0.9, Color.rgb(198, 235, 254)],
+      [1, Color.rgb(0, 170, 255)],
     ],
   },
   stability: {
     goldie: [
-      [0, new Color(0xf0, 0xf0, 0xf0)],
-      [1, new Color(0xe8, 0xbf, 0xbf)],
-      [3, new Color(0xff, 0xf7, 0x85)],
-      [7, new Color(0x59, 0xe1, 0x5e)],
-      [15, new Color(0x00, 0x88, 0xff)],
+      [0, Color.rgb(240, 240, 240)],
+      [1, Color.rgb(246, 198, 197)],
+      [3, Color.rgb(211, 209, 110)],
+      [7, Color.rgb(65, 200, 110)],
+      [15, Color.rgb(47, 155, 249)],
     ],
     bluesea: [
-      [0, new Color(0xff, 0xff, 0xff)],
-      [1, new Color(0xc0, 0xe0, 0xff)],
-      [15, new Color(0x00, 0x88, 0xff)],
+      [0, Color.rgb(240, 240, 240)],
+      [2, Color.rgb(198, 235, 254)],
+      [15, Color.rgb(0, 170, 255)],
     ],
   },
 };

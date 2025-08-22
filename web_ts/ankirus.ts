@@ -187,7 +187,7 @@ class AnkirusApp {
       groupElement.appendChild(this._createDiv("grouptotal", str_weight));
       const statElement = this._createDiv("groupretention", str_value);
       statElement.style.color = colorLine(colorline, value)
-        .interpolate(new Color(0, 0, 0), 0.2)
+        .interpolate(Color.rgb(0, 0, 0), 0.2)
         .toString();
       groupElement.appendChild(statElement);
     }
@@ -282,7 +282,7 @@ class AnkirusApp {
       colorline,
       card.st_value,
     )
-      .interpolate(new Color(0, 0, 0), 0.2)
+      .interpolate(Color.rgb(0, 0, 0), 0.2)
       .toString();
     document.getElementById("question")!.innerHTML = card.front;
     document.getElementById("answer")!.innerHTML = card.back;

@@ -82,7 +82,7 @@ class StateMap {
       text.setAttribute("x", ((v / max) * 512).toString());
       text.setAttribute("y", "26");
       const color = colorLine(colorline, v)
-        .interpolate(new Color(0, 0, 0), 0.2)
+        .interpolate(Color.rgb(0, 0, 0), 0.2)
         .toString();
       text.setAttribute("font-size", "12");
       text.setAttribute("font-weight", "bold");
@@ -240,7 +240,7 @@ class StateMap {
     if (item.mode == "card") {
       this._createRect(pos, size, item.card, item.value);
       if (item.card.paused) {
-        this._createIndicator(pos!, size!, new Color(0xff, 0x00, 0x00));
+        this._createIndicator(pos!, size!, Color.rgb(255, 0, 0));
       }
     } else {
       this.drawGroup(item.group, pos, size, layer, item.cardsOnly);
@@ -268,7 +268,7 @@ class StateMap {
       rect.setAttribute("fill", color.toString());
       rect.setAttribute(
         "stroke",
-        color.interpolate(new Color(0, 0, 0), 0.05).toString(),
+        color.interpolate(Color.rgb(0, 0, 0), 0.05).toString(),
       );
       rect.addEventListener("mouseover", () => {
         if (this.lockedItem === null) {
@@ -320,7 +320,7 @@ class StateMap {
       this.lockIndicator = this._createIndicator(
         pos!,
         size!,
-        new Color(0x00, 0x88, 0xff),
+        Color.rgb(0, 128, 255),
       );
     }
   }
