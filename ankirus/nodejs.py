@@ -3,6 +3,9 @@ import asyncio
 import json
 from typing import Optional, Any, TypedDict, cast
 from base64 import b64decode
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class ReplyOK(TypedDict):
@@ -75,6 +78,7 @@ class NodeJSAgent:
         reply = self.reply[this_id]
         del self.reply[this_id]
         if "result" not in reply:  # Make mypy happy
+            log.error(f"call {name} with {args!r} failed: {reply!r}")
             raise Exception(reply["error"])
         elif "error" not in reply:
             return reply["result"]

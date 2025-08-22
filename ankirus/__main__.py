@@ -1,26 +1,35 @@
 import asyncio
 import logging
 import json
-from typing import cast
+from typing import cast, Sequence, Mapping, Any, TypedDict, Literal, NotRequired, Union
 from dataclasses import asdict
 import time
 import calendar
+import argparse
 
 from aiohttp import web
 
-from .ankidata import GroupNotFound
-from .ankicached import load_anki_data_cached, get_anki_data_mtime
+from .ankicached import AnkiCachedReader
 from .config import Config
 from .nodejs import NodeJSAgent
 
-config = Config()
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
+Json = Mapping[str, "Json"] | Sequence["Json"] | str | int | float | bool | None
 
 
-nodejs_agent = NodeJSAgent()
+class ReplyGroup(TypedDict):
+    group: list[str]
 
-Json = dict[str, "Json"] | list["Json"] | str | int | float | bool | None
+
+class ReplyCard(TypedDict):
+    time: int
+    difficulty: float
+    stability: float
+    decay: float
+    front: str
+    back: str
+    paused: NotRequired[Literal[True]]
 
 
 def strip_dight(obj: Json) -> Json:
@@ -29,73 +38,110 @@ def strip_dight(obj: Json) -> Json:
     elif isinstance(obj, list):
         return [strip_dight(item) for item in obj]
     elif isinstance(obj, float):
-        return round(obj, 3)
+        obj = round(obj, 3)
+        if obj % 1.0 == 0.0:
+            obj = int(obj)
+        return obj
     else:
         return obj
 
 
-async def handle_cards(request: web.Request) -> web.Response:
-    cache_timestamp = await get_anki_data_mtime(
-        config.get("userprofile") + "collection.anki2"
-    )
-    last_modified = time.strftime(
-        "%a, %d %b %Y %H:%M:%S GMT", time.gmtime(int(cache_timestamp))
-    )
-    if_modified_since = request.headers.get("If-Modified-Since", "?")
-    try:
-        req_timestamp = calendar.timegm(
-            time.strptime(if_modified_since, "%a, %d %b %Y %H:%M:%S GMT")
+class App:
+    def __init__(self, config: Config) -> None:
+        self.config = config
+        self.ankireader = AnkiCachedReader(
+            self.config.get("userprofile") + "collection.anki2", self.config
         )
-    except ValueError:
-        req_timestamp = int(cache_timestamp) - 1
-    headers = {"Last-Modified": last_modified, "Cache-Control": "no-cache"}
-    if int(cache_timestamp) <= int(req_timestamp):
-        return web.Response(status=304, headers=headers)
-    card_groups = await load_anki_data_cached(
-        config.get("userprofile") + "collection.anki2", config
-    )
-    a_group = request.query.get("group")
-    if a_group is not None and a_group != "":
+        self.nodejs_agent = NodeJSAgent()
+
+    async def sanitize(self, text: str) -> str:
+        return await self.nodejs_agent.purify(text)
+
+    async def handle_cards(self, request: web.Request) -> web.Response:
+        cards = await self.ankireader.read(sanitize=self.sanitize)
+        cache_timestamp = self.ankireader.cache_mtime
+        last_modified = time.strftime(
+            "%a, %d %b %Y %H:%M:%S GMT", time.gmtime(int(cache_timestamp))
+        )
+        if_modified_since = request.headers.get("If-Modified-Since", "?")
         try:
-            card_groups = card_groups.subgroup(*a_group.split("::"))
-        except GroupNotFound:
-            return web.Response(text='{"error":"group not found"}', status=404)
-    jsondict = cast(Json, asdict(card_groups))
-    jsondict = strip_dight(jsondict)
-    jsondata = json.dumps(jsondict, ensure_ascii=False, separators=(",", ":"))
-    response = web.Response(
-        text=jsondata, content_type="application/json", headers=headers
-    )
-    response.enable_compression(strategy=9)
-    return response
+            req_timestamp = calendar.timegm(
+                time.strptime(if_modified_since, "%a, %d %b %Y %H:%M:%S GMT")
+            )
+        except ValueError:
+            req_timestamp = int(cache_timestamp) - 1
+        headers = {
+            "Last-Modified": last_modified,
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/json",
+        }
+        if int(cache_timestamp) <= int(req_timestamp):
+            return web.Response(status=304, headers=headers)
 
+        response_arr: list[Union[ReplyGroup, ReplyCard]] = []
+        last_group = ""
+        for card in cards:
+            if card.group != last_group:
+                response_arr.append({"group": card.group.split("::")})
+                last_group = card.group
+            card_dict: ReplyCard = {
+                "time": card.time,
+                "difficulty": card.difficulty,
+                "stability": card.stability,
+                "decay": card.decay,
+                "front": card.front,
+                "back": card.back,
+            }
+            if card.paused:
+                card_dict["paused"] = True
+            response_arr.append(card_dict)
+        responseBody = json.dumps(
+            strip_dight(cast(Json, response_arr)),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        response = web.Response(body=responseBody, headers=headers)
+        response.enable_compression(strategy=9)
+        return response
 
-async def handle_index(request: web.Request) -> web.FileResponse:
-    return web.FileResponse("web/index.html")
+    async def handle_index(self, request: web.Request) -> web.FileResponse:
+        return web.FileResponse("web/index.html")
+
+    async def run(self) -> None:
+        await self.nodejs_agent.agent_run()
+
+        app = web.Application()
+        app.router.add_get("/", self.handle_index)
+        app.router.add_get("/cards/", self.handle_cards)
+        app.router.add_static("/static/", "web")
+        app.router.add_static(
+            "/", self.config.get("userprofile") + self.config.get("media")
+        )
+
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", self.config.get("port"))
+        await site.start()
+
+        log.info(f"ankirus started at http://127.0.0.1:{self.config.get('port')}")
+        try:
+            while True:
+                await asyncio.sleep(3600)
+        except KeyboardInterrupt:
+            log.info("ankirus stopped")
+
+        await self.nodejs_agent.agent_close()
 
 
 async def main() -> None:
-    await nodejs_agent.agent_run()
+    parser = argparse.ArgumentParser(description="ankirus")
+    parser.add_argument("--config", type=str, default="config.json", help="config file")
+    args = parser.parse_args()
+    config = Config(args.config)
 
-    app = web.Application()
-    app.router.add_get("/", handle_index)
-    app.router.add_get("/cards/", handle_cards)
-    app.router.add_static("/static/", "web")
-    app.router.add_static("/", config.get("userprofile") + config.get("media"))
+    app = App(config)
 
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, "127.0.0.1", 24032)
-    await site.start()
-
-    log.info("ankirus started at http://127.0.0.1:24032")
-    try:
-        while True:
-            await asyncio.sleep(3600)
-    except KeyboardInterrupt:
-        log.info("ankirus stopped")
-
-    await nodejs_agent.agent_close()
+    await app.run()
 
 
 if __name__ == "__main__":

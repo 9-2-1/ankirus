@@ -9,6 +9,7 @@ class Config:
         self._config: Dict[str, Any] = {
             "media": "collection.media\\",
             "userprofile": "C:\\Users\\11951\\AppData\\Roaming\\Anki2\\arigi\\",
+            "tmp_db": "tmp-collection.anki2",
             "port": 24032,
             "cache_ttl": 300,
         }

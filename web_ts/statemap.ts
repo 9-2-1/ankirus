@@ -1,25 +1,24 @@
 type RectItem =
   | {
-      weight: number;
       mode: "group";
+      weight: number;
+      value: number;
       group: CardGroup;
       cardsOnly: false;
-      value: number;
       groupname: string;
     }
   | {
-      weight: number;
       mode: "group";
+      weight: number;
+      value: number;
       group: CardGroup;
       cardsOnly: true;
-      value: number;
     }
   | {
-      weight: number;
       mode: "card";
-      card: Card;
-      cardgroupname: Array<string>;
+      weight: number;
       value: number;
+      card: Card;
     };
 
 class StateMap {
@@ -40,7 +39,7 @@ class StateMap {
     Array.from(this.svg.children).forEach((element) => {
       this.svg.removeChild(element);
     });
-    this.drawGroup(group, [], { x: 0, y: 0 }, { x: 512, y: 512 }, 5);
+    this.drawGroup(group, { x: 0, y: 0 }, { x: 512, y: 512 }, 5);
     this.updateLegend();
   }
   updateLegend() {
@@ -95,90 +94,68 @@ class StateMap {
   }
   drawGroup(
     group: CardGroup,
-    cardgroupname: Array<string>,
     pos: { x: number; y: number },
     size: { x: number; y: number },
     layer: number,
     cardsOnly: boolean = false,
   ) {
     // background
-    this._createRect(pos, size, null, 0, cardgroupname);
+    const value = group.st_value_weight / group.st_weight;
+    this._createRect(pos, size, null, group.st_value_weight / group.st_weight);
     // groups and cards
     const rectItems: Array<RectItem> = [];
-    if (Object.keys(group.groups).length == 0) {
+    if (group.groups.size == 0) {
       cardsOnly = true;
     }
     if (cardsOnly) {
       group.cards
-        .sort((a, b) => b.stats.weight - a.stats.weight)
+        .sort((a, b) => b.st_weight - a.st_weight)
         .forEach((card) => {
-          let weight = 0;
-          let value = 0;
-          switch (this.app.options.weight) {
-            case "difficulty":
-              weight = card.stats.weight;
-              break;
-            case "count":
-              weight = 1;
-              break;
-          }
-          switch (this.app.options.value) {
-            case "retention":
-              value = card.stats.retention;
-              break;
-            case "stability":
-              value = card.stats.stability;
-              break;
-          }
-          rectItems.push({ weight, mode: "card", card, cardgroupname, value });
+          rectItems.push({
+            mode: "card",
+            weight: card.st_weight,
+            value: card.st_value,
+            card,
+          });
         });
     } else {
       // groups and an optional "cards" group
-      let value = 0;
-      switch (this.app.options.value) {
-        case "retention":
-          value = group.stats.retention_weight / group.stats.weight;
-          break;
-        case "stability":
-          value = group.stats.stability_weight / group.stats.weight;
-          break;
-      }
-      Object.entries(group.groups)
+      Array.from(group.groups.entries())
         .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
         .forEach(([key, subgroup]) => {
           rectItems.push({
-            weight:
-              this.app.options.weight == "difficulty"
-                ? subgroup.stats.weight
-                : subgroup.stats.total,
             mode: "group",
+            weight: subgroup.st_weight,
+            value: subgroup.st_value_weight / subgroup.st_weight,
             group: subgroup,
             cardsOnly: false,
-            value,
             groupname: key,
           });
         });
       if (group.cards.length !== 0) {
         const cardsWeight = group.cards.reduce(
-          (acc, cur) => acc + cur.stats.weight,
+          (acc, cur) => acc + cur.st_weight,
+          0,
+        );
+        const cardsWeightValue = group.cards.reduce(
+          (acc, cur) => acc + cur.st_value * cur.st_weight,
           0,
         );
         rectItems.push({
-          weight: cardsWeight,
           mode: "group",
+          weight: cardsWeight,
+          value: cardsWeightValue / cardsWeight,
           group: group,
           cardsOnly: true,
-          value,
         });
       }
     }
     // areas arranging
-    this.arrange(cardgroupname, rectItems, pos, size, layer, cardsOnly);
+    this.arrange(rectItems, pos, size, layer, cardsOnly);
     // border
     this._createBorder(pos, size, layer);
   }
   arrange(
-    cardgroupname: Array<string>,
     rectItems: Array<RectItem>,
     pos: { x: number; y: number },
     size: { x: number; y: number },
@@ -241,12 +218,7 @@ class StateMap {
         const item2 = rectItems[k];
         XL = (item2.weight / rowWeight) * size[X];
         size0[X] = XL;
-        // item2 => pos: {X0, pos[Y]} size: {XL, YL}
-        let cardgroupname2 = cardgroupname;
-        if (item2.mode === "group" && !item2.cardsOnly) {
-          cardgroupname2 = [...cardgroupname2, item2.groupname];
-        }
-        this.place(cardgroupname2, item2, pos0, size0, layer);
+        this.place(item2, pos0, size0, layer);
         pos0[X] += XL;
       }
       pos[Y] += YL;
@@ -256,23 +228,15 @@ class StateMap {
     }
   }
   place(
-    cardgroupname: Array<string>,
     item: RectItem,
     pos: { x: number; y: number },
     size: { x: number; y: number },
     layer: number,
   ) {
     if (item.mode == "card") {
-      this._createRect(pos, size, item.card, item.value, cardgroupname);
+      this._createRect(pos, size, item.card, item.value);
     } else {
-      this.drawGroup(
-        item.group,
-        cardgroupname,
-        pos,
-        size,
-        layer,
-        item.cardsOnly,
-      );
+      this.drawGroup(item.group, pos, size, layer, item.cardsOnly);
     }
   }
   _createRect(
@@ -280,7 +244,6 @@ class StateMap {
     size: { x: number; y: number },
     card: Card | null,
     value: number,
-    cardgroupname: Array<string>,
   ) {
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     rect.setAttribute("x", pos.x.toFixed(1).toString());
@@ -303,14 +266,12 @@ class StateMap {
       rect.addEventListener("mouseover", () => {
         if (this.lockedItem === null) {
           this.app.currentCard = card;
-          this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
         }
       });
       rect.addEventListener("mouseout", () => {
         if (this.lockedItem === null) {
           this.app.currentCard = null;
-          this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
         }
       });
@@ -319,13 +280,11 @@ class StateMap {
       rect.addEventListener("click", () => {
         if (this.lockedItem !== card) {
           this.app.currentCard = card;
-          this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
           this.lockedItem = card;
           this.updateLockIndicator(true, pos0, size0);
         } else {
           this.app.currentCard = null;
-          this.app.currentCardGroup = cardgroupname;
           this.app.updateDescription();
           this.lockedItem = null;
           this.updateLockIndicator(false);

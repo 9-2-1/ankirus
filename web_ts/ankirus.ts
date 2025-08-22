@@ -1,8 +1,7 @@
 class AnkirusApp {
-  public currentGroupName: Array<string> = [];
-  public currentGroup: CardGroup | null = null;
+  public curGroupName: Array<string> = [];
+  public curGroup: CardGroup | null = null;
   public currentCard: Card | null = null;
-  public currentCardGroup: Array<string> = [];
   public options: Options = new Options();
 
   private statemap: StateMap = new StateMap(this);
@@ -18,27 +17,122 @@ class AnkirusApp {
     this.initEventListeners();
   }
 
-  async loadCards(group?: Array<string>) {
+  async loadCards() {
     try {
       let url = "cards/";
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
-      this.rootGroup = data;
-      this.currentGroupName = group ?? [];
-      this.currentGroup = this.rootGroup;
-      for (const name of this.currentGroupName) {
-        if (name != "") {
-          this.currentGroup = this.currentGroup!.groups[name]!;
-        }
-      }
-      this.updateDescription();
-      this.updateStatemap();
+      const data = (await response.json()) as Array<ReplyCard | ReplyGroup>;
+      this.rootGroup = this._parseReply(data);
+      this.selectGroup(this.curGroupName);
+      this.updateStat();
     } catch (error) {
       console.error("Error loading cards:", error);
     }
+  }
+
+  selectGroup(group: Array<string>) {
+    this.curGroupName = group;
+    this.curGroup = this.rootGroup;
+    for (const name of this.curGroupName) {
+      if (this.curGroup === null) {
+        break;
+      }
+      this.curGroup = this.curGroup.groups.get(name) ?? null;
+    }
+  }
+
+  _retention(card: Card, timestamp: number) {
+    const S = card.stability;
+    const T = card.time;
+    const DECAY = card.decay;
+    if (S === 0) {
+      return 0;
+    }
+    const factor = Math.pow(0.9, 1.0 / -DECAY) - 1.0;
+    const days_elapsed = (timestamp - T) / 86400.0;
+    const reta = Math.pow((days_elapsed / S) * factor + 1.0, -DECAY);
+    if (typeof reta === "number") {
+      return reta;
+    }
+    throw new Error("retrievability is not a float");
+  }
+
+  updateGroupStat(group: CardGroup) {
+    group.st_weight = 0;
+    group.st_value_weight = 0;
+    group.groups.forEach((subgroup) => {
+      this.updateGroupStat(subgroup);
+      group.st_weight += subgroup.st_weight;
+      group.st_value_weight += subgroup.st_value_weight;
+    });
+    for (const card of group.cards) {
+      switch (this.options.weight) {
+        case "count":
+          card.st_weight = 1;
+          break;
+        case "difficulty":
+          card.st_weight = card.difficulty;
+          break;
+      }
+      switch (this.options.value) {
+        case "retention":
+          card.st_value = this._retention(card, Date.now() / 1000);
+          break;
+        case "stability":
+          card.st_value = card.stability;
+          break;
+      }
+      group.st_weight += card.st_weight;
+      group.st_value_weight += card.st_value;
+    }
+  }
+
+  updateStat() {
+    if (this.rootGroup === null) {
+      return;
+    }
+    this.updateGroupStat(this.rootGroup);
+    this.updateDescription();
+    this.updateStatemap();
+  }
+
+  _parseReply(data: Array<ReplyCard | ReplyGroup>): CardGroup {
+    const root: CardGroup = {
+      cards: [],
+      groups: new Map(),
+      st_weight: 0,
+      st_value_weight: 0,
+    };
+    let curGroup: CardGroup = root;
+    let curGroupName: Array<string> = [];
+    for (const item of data) {
+      if ("group" in item) {
+        curGroup = root;
+        curGroupName = item.group;
+        curGroupName.forEach((name) => {
+          if (!curGroup.groups.has(name)) {
+            curGroup.groups.set(name, {
+              cards: [],
+              groups: new Map(),
+              st_weight: 0,
+              st_value_weight: 0,
+            });
+          }
+          curGroup = curGroup.groups.get(name)!;
+        });
+      } else {
+        let card: Card = Object.assign({}, item, {
+          group: curGroupName,
+          st_weight: 0,
+          st_value: 0,
+        });
+        curGroup.cards.push(card);
+      }
+    }
+    return root;
   }
 
   _createDiv(classname: string, content: string): HTMLDivElement {
@@ -63,37 +157,35 @@ class AnkirusApp {
     groupElement.appendChild(nameElement);
     if (linkname !== null) {
       indentElement.addEventListener("click", () => {
-        this.loadCards(linkname);
+        this.selectGroup(linkname);
       });
       nameElement.addEventListener("click", () => {
-        this.loadCards(linkname);
+        this.selectGroup(linkname);
       });
     }
     if (subgroup !== null) {
-      let value = 0;
-      let groupstat = "";
-      let groupcolor: Color = new Color(0, 0, 0);
+      let str_value = "";
+      let str_weight = "";
       const colorline = colormaps[this.options.value][this.options.style];
-      switch (this.options.value) {
-        case "retention":
-          value = subgroup.stats.retention_weight / subgroup.stats.weight;
-          groupstat = (value * 100).toFixed(1) + "%";
-
+      const value = subgroup.st_value_weight / subgroup.st_weight;
+      switch (this.options.weight) {
+        case "count":
+          str_weight = subgroup.st_weight.toString();
           break;
-        case "stability":
-          value = subgroup.stats.stability_weight / subgroup.stats.weight;
-          groupstat = value.toFixed(1) + "d";
+        case "difficulty":
+          str_weight = subgroup.st_weight.toFixed(1);
           break;
       }
-      groupElement.appendChild(
-        this._createDiv(
-          "grouptotal",
-          this.options.weight == "difficulty"
-            ? subgroup.stats.weight.toFixed(1)
-            : subgroup.stats.total.toString(),
-        ),
-      );
-      const statElement = this._createDiv("groupretention", groupstat);
+      switch (this.options.value) {
+        case "retention":
+          str_value = (value * 100).toFixed(1) + "%";
+          break;
+        case "stability":
+          str_value = value.toFixed(1) + "d";
+          break;
+      }
+      groupElement.appendChild(this._createDiv("grouptotal", str_weight));
+      const statElement = this._createDiv("groupretention", str_value);
       statElement.style.color = colorLine(colorline, value)
         .interpolate(new Color(0, 0, 0), 0.2)
         .toString();
@@ -108,44 +200,52 @@ class AnkirusApp {
       this.renderCard(this.currentCard);
     } else {
       this.showGroup(true);
-      this.updateGroupInfo();
+      this.renderGroup();
     }
   }
+
   updateStatemap() {
-    if (this.currentGroup !== null) {
-      this.statemap.update(this.currentGroup);
+    if (this.curGroup !== null) {
+      this.statemap.update(this.curGroup);
     }
   }
-  updateGroupInfo() {
-    if (this.currentGroup === null) {
+
+  renderGroup() {
+    if (this.curGroup === null) {
       return;
     }
     const groupsContainer = document.getElementById("descp-groups")!;
     Array.from(groupsContainer.children).forEach((element) => {
       groupsContainer.removeChild(element);
     });
-    if (this.currentGroupName.length > 0) {
-      const parentName = this.currentGroupName.slice(0, -1);
+    let parent = this.rootGroup;
+    let parentName = [];
+    for (const name of this.curGroupName) {
+      if (parent === null) {
+        break;
+      }
       groupsContainer.appendChild(
-        this._groupElement("←", parentName.join("::"), parentName, null),
+        this._groupElement("←", parentName.join("::"), [...parentName], parent),
       );
+      parent = parent.groups.get(name) ?? null;
+      parentName.push(name);
     }
     groupsContainer.appendChild(
       this._groupElement(
         "  ",
-        this.currentGroupName.join("::"),
-        this.currentGroupName,
-        this.currentGroup,
+        this.curGroupName.join("::"),
+        this.curGroupName,
+        this.curGroup,
       ),
     );
-    Object.entries(this.currentGroup.groups)
+    Array.from(this.curGroup.groups.entries())
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
       .forEach(([key, subgroup]) => {
         groupsContainer.appendChild(
           this._groupElement(
             "  → ",
             key,
-            [...this.currentGroupName, key],
+            [...this.curGroupName, key],
             subgroup,
           ),
         );
@@ -165,29 +265,27 @@ class AnkirusApp {
   renderCard(card: Card) {
     const colorline = colormaps[this.options.value][this.options.style];
     document.getElementById("descp-card-groupname")!.textContent =
-      this.currentCardGroup.join("::");
+      this.currentCard!.group.join("::");
     document.getElementById("descp-card-groupname")!.title =
-      this.currentCardGroup.join("::");
+      this.currentCard!.group.join("::");
+    let str_value = "";
     switch (this.options.value) {
       case "retention":
-        document.getElementById("descp-card-retention")!.textContent =
-          `${(card.stats.retention * 100).toFixed(1)}%`;
-        document.getElementById("descp-card-retention")!.style.color =
-          colorLine(colorline, card.stats.retention)
-            .interpolate(new Color(0, 0, 0), 0.2)
-            .toString();
+        str_value = (card.st_value * 100).toFixed(1) + "%";
         break;
       case "stability":
-        document.getElementById("descp-card-retention")!.textContent =
-          `${card.stats.stability.toFixed(1)}d`;
-        document.getElementById("descp-card-retention")!.style.color =
-          colorLine(colorline, card.stats.stability)
-            .interpolate(new Color(0, 0, 0), 0.2)
-            .toString();
+        str_value = card.st_value.toFixed(1) + "d";
         break;
     }
-    document.getElementById("question")!.innerHTML = card.content[0];
-    document.getElementById("answer")!.innerHTML = card.content[1];
+    document.getElementById("descp-card-retention")!.textContent = str_value;
+    document.getElementById("descp-card-retention")!.style.color = colorLine(
+      colorline,
+      card.st_value,
+    )
+      .interpolate(new Color(0, 0, 0), 0.2)
+      .toString();
+    document.getElementById("question")!.innerHTML = card.front;
+    document.getElementById("answer")!.innerHTML = card.back;
     document.getElementById("answer")!.style.display = "none";
     document.getElementById("show-answer")!.style.display = "block";
   }
@@ -211,20 +309,26 @@ class AnkirusApp {
     });
     document.getElementById("options-style")!.addEventListener("change", () => {
       this.options.syncChange();
-      this.updateStatemap();
-      this.updateDescription();
+      this.updateStat();
     });
     document.getElementById("options-value")!.addEventListener("change", () => {
       this.options.syncChange();
-      this.updateStatemap();
-      this.updateDescription();
+      this.updateStat();
+    });
+    const reloadElement = document.getElementById(
+      "options-reload",
+    )! as HTMLButtonElement;
+    reloadElement.addEventListener("click", () => {
+      reloadElement.disabled = true;
+      this.loadCards().finally(() => {
+        reloadElement.disabled = false;
+      });
     });
     document
       .getElementById("options-weight")!
       .addEventListener("change", () => {
         this.options.syncChange();
-        this.updateStatemap();
-        this.updateDescription();
+        this.updateStat();
       });
   }
 }

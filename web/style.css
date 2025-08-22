@@ -11,6 +11,9 @@ body {
 button,
 select {
   border: none;
+  padding: 10px;
+  font-size: 20px;
+  background-color: white;
 }
 
 * {
@@ -157,7 +160,6 @@ svg * {
 
 #descp-card-content > #show-answer {
   flex-grow: 0;
-  font-size: 20px;
   padding: 10px;
   display: none;
 }
@@ -228,4 +230,5 @@ svg * {
 
 #options > * {
   flex-grow: 1;
+  min-width: 0;
 }

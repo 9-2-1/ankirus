@@ -1,36 +1,43 @@
-type RetentionParams = {
-  basetime: number; // Unix Timestamp
+type Card = {
+  group: Array<string>;
+
+  front: string;
+  back: string;
+
+  // memory model
+  time: number; // Unix Timestamp
   difficulty: number;
   stability: number;
   decay: number;
-};
 
-type CardStats = {
-  total: number;
-  paused: 0 | 1;
-  weight: number;
-  retention: number;
-  stability: number;
-};
-
-type Card = {
-  cid: number; // 对应后端的cid
-  content: [string, string];
-  retention_params: RetentionParams;
+  // other
   paused: boolean;
-  stats: CardStats;
+
+  // stat
+  st_weight: number;
+  st_value: number;
 };
 
-type CardGroupStats = {
-  total: number;
-  paused: number;
-  weight: number;
-  retention_weight: number;
-  stability_weight: number;
+type ReplyGroup = {
+  group: Array<string>;
+};
+
+type ReplyCard = {
+  cid: number;
+  time: number;
+  difficulty: number;
+  stability: number;
+  decay: number;
+  front: string;
+  back: string;
+  paused: NotRequired<true>;
 };
 
 type CardGroup = {
   cards: Card[];
-  groups: Record<string, CardGroup>;
-  stats: CardGroupStats;
+  groups: Map<string, CardGroup>;
+
+  // stat
+  st_weight: number;
+  st_value_weight: number;
 };
