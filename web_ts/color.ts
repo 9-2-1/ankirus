@@ -49,7 +49,7 @@ function colorLine(colormap: Array<[number, Color]>, value: number): Color {
 const black = Color.rgb(0, 0, 0);
 const white = Color.rgb(255, 255, 255);
 const colormaps: Record<
-  "retention" | "stability",
+  "retention" | "stability" | "stability-0",
   Record<"goldie" | "bluesea", Array<[number, Color]>>
 > = {
   retention: {
@@ -67,6 +67,20 @@ const colormaps: Record<
     ],
   },
   stability: {
+    goldie: [
+      [0, Color.rgb(240, 240, 240)],
+      [1, Color.rgb(246, 198, 197)],
+      [3, Color.rgb(211, 209, 110)],
+      [7, Color.rgb(65, 200, 110)],
+      [15, Color.rgb(47, 155, 249)],
+    ],
+    bluesea: [
+      [0, Color.rgb(240, 240, 240)],
+      [2, Color.rgb(198, 235, 254)],
+      [15, Color.rgb(0, 170, 255)],
+    ],
+  },
+  "stability-0": {
     goldie: [
       [0, Color.rgb(240, 240, 240)],
       [1, Color.rgb(246, 198, 197)],

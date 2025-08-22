@@ -83,7 +83,11 @@ class AnkirusApp {
           card.st_value = this._retention(card, curTime);
           break;
         case "stability":
-          card.st_value = card.stability - (curTime - card.time) / 86400;
+          card.st_value =
+            card.stability - Math.max(curTime - card.time, 0) / 86400;
+          break;
+        case "stability-0":
+          card.st_value = card.stability / 86400;
           break;
       }
       group.st_weight += card.st_weight;
@@ -182,6 +186,7 @@ class AnkirusApp {
           str_value = (value * 100).toFixed(1) + "%";
           break;
         case "stability":
+        case "stability-0":
           str_value = value.toFixed(1) + "d";
           break;
       }
@@ -287,6 +292,7 @@ class AnkirusApp {
         str_value = (card.st_value * 100).toFixed(1) + "%";
         break;
       case "stability":
+      case "stability-0":
         str_value = card.st_value.toFixed(1) + "d";
         break;
     }
