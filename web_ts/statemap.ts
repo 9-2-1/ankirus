@@ -108,7 +108,7 @@ class StateMap {
       cardsOnly = true;
     }
     if (cardsOnly) {
-      group.cards
+      [...group.cards]
         .sort((a, b) => b.st_weight - a.st_weight)
         .forEach((card) => {
           rectItems.push({
@@ -170,7 +170,11 @@ class StateMap {
     let Y: "x" | "y" = "y";
     let i = 0;
     while (i < rectItems.length) {
-      if (cardsOnly && size.x > size.y) {
+      if (
+        cardsOnly &&
+        this.app.options.weight == "difficulty" &&
+        size.x > size.y
+      ) {
         X = "y";
         Y = "x";
       } else {
@@ -235,6 +239,9 @@ class StateMap {
   ) {
     if (item.mode == "card") {
       this._createRect(pos, size, item.card, item.value);
+      if (item.card.paused) {
+        this._createIndicator(pos!, size!, new Color(0xff, 0x00, 0x00));
+      }
     } else {
       this.drawGroup(item.group, pos, size, layer, item.cardsOnly);
     }
@@ -292,6 +299,7 @@ class StateMap {
       });
     }
     this.svg.appendChild(rect);
+    return rect;
   }
   updateLockIndicator(locked: false): void;
   updateLockIndicator(
@@ -309,19 +317,24 @@ class StateMap {
       this.lockIndicator = null;
     }
     if (locked) {
-      this.lockIndicator = this._createLockIndicator(pos!, size!);
+      this.lockIndicator = this._createIndicator(
+        pos!,
+        size!,
+        new Color(0x00, 0x88, 0xff),
+      );
     }
   }
-  _createLockIndicator(
+  _createIndicator(
     pos: { x: number; y: number },
     size: { x: number; y: number },
+    color: Color,
   ): SVGRectElement {
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute("x", pos.x.toFixed(1).toString());
-    rect.setAttribute("y", pos.y.toFixed(1).toString());
-    rect.setAttribute("width", size.x.toFixed(1).toString());
-    rect.setAttribute("height", size.y.toFixed(1).toString());
-    rect.setAttribute("stroke", "#00aaff");
+    rect.setAttribute("x", (pos.x + 1.5).toFixed(1).toString());
+    rect.setAttribute("y", (pos.y + 1.5).toFixed(1).toString());
+    rect.setAttribute("width", (size.x - 3).toFixed(1).toString());
+    rect.setAttribute("height", (size.y - 3).toFixed(1).toString());
+    rect.setAttribute("stroke", color.toString());
     rect.setAttribute("stroke-width", "3");
     rect.setAttribute("fill", "none");
     this.svg.appendChild(rect);
@@ -341,5 +354,6 @@ class StateMap {
     rect.setAttribute("stroke-width", (layer / 2).toFixed(1).toString());
     rect.setAttribute("fill", "none");
     this.svg.appendChild(rect);
+    return rect;
   }
 }

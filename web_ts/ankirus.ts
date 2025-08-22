@@ -27,7 +27,6 @@ class AnkirusApp {
       const data = (await response.json()) as Array<ReplyCard | ReplyGroup>;
       this.rootGroup = this._parseReply(data);
       this.selectGroup(this.curGroupName);
-      this.updateStat();
     } catch (error) {
       console.error("Error loading cards:", error);
     }
@@ -42,8 +41,7 @@ class AnkirusApp {
       }
       this.curGroup = this.curGroup.groups.get(name) ?? null;
     }
-    this.updateDescription();
-    this.updateStatemap();
+    this.updateStat();
   }
 
   _retention(card: Card, timestamp: number) {
