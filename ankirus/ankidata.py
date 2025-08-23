@@ -48,7 +48,7 @@ async def load_anki_data(
         # RESCHEDULED: RevlogEntry._ReviewKind.ValueType  # 5
         RESCHEDULED = 5
         time = 0
-        for revlog in reversed(cstats.revlog):
+        for revlog in cstats.revlog:  # Already reversed
             if revlog.review_kind != RESCHEDULED:
                 time = revlog.time
                 break
