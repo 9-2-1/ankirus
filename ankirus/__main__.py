@@ -12,6 +12,7 @@ from aiohttp import web
 from .ankicached import AnkiCachedReader
 from .config import Config
 from .nodejs import NodeJSAgent
+from .richia_fusion import richia_fusion
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -89,8 +90,8 @@ class App:
                 "difficulty": card.difficulty,
                 "stability": card.stability,
                 "decay": card.decay,
-                "front": card.front,
-                "back": card.back,
+                "front": richia_fusion(card.front),
+                "back": richia_fusion(card.back),
             }
             if card.paused:
                 card_dict["paused"] = True
