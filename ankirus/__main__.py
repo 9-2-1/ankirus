@@ -4,6 +4,7 @@ import json
 from typing import cast, Sequence, Mapping, Any, TypedDict, Literal, NotRequired, Union
 from dataclasses import asdict
 import time
+import sqlite3
 import calendar
 import argparse
 
@@ -12,7 +13,6 @@ from aiohttp import web
 from .ankicached import AnkiCachedReader
 from .config import Config
 from .nodejs import NodeJSAgent
-from .richia_fusion import richia_fusion
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -54,12 +54,44 @@ class App:
             self.config.get("userprofile") + "collection.anki2", self.config
         )
         self.nodejs_agent = NodeJSAgent()
+        self.banned_words = []
+        with open(self.config.get("banned_words"), "r", encoding="utf-8") as f:
+            self.banned_words = f.read().splitlines()
+            self.banned_words = [
+                word.strip() for word in self.banned_words if word.strip() != ""
+            ]
+            self.banned_words.sort(key=len, reverse=True)
+        self.cachedb = sqlite3.connect(self.config.get("cachedb"))
+        self.cachedb.execute(
+            "CREATE TABLE IF NOT EXISTS sanitize (input TEXT PRIMARY KEY, output TEXT) WITHOUT ROWID"
+        )
+        self.cachedb.commit()
 
-    async def sanitize(self, text: str) -> str:
-        return await self.nodejs_agent.purify(text)
+    async def sanitize_cached(self, text: str) -> str:
+        input_text = text
+        cacherow = self.cachedb.execute(
+            "SELECT output FROM sanitize WHERE input = ?", (input_text,)
+        ).fetchone()
+        if cacherow:
+            text = cast(str, cacherow[0])
+            if text == "":
+                text = input_text
+            return text
+        text = await self.nodejs_agent.purify(text)
+        while True:
+            old_text = text
+            for word in self.banned_words:
+                text = text.replace(word, "")
+            if old_text == text:
+                break
+        self.cachedb.execute(
+            "INSERT INTO sanitize (input, output) VALUES (?, ?)", (input_text, "" if input_text == text else text)
+        )
+        self.cachedb.commit()
+        return text
 
     async def handle_cards(self, request: web.Request) -> web.Response:
-        cards = await self.ankireader.read(sanitize=self.sanitize)
+        cards = await self.ankireader.read(sanitize=self.sanitize_cached)
         cache_timestamp = self.ankireader.cache_mtime
         last_modified = time.strftime(
             "%a, %d %b %Y %H:%M:%S GMT", time.gmtime(int(cache_timestamp))
@@ -90,8 +122,8 @@ class App:
                 "difficulty": card.difficulty,
                 "stability": card.stability,
                 "decay": card.decay,
-                "front": richia_fusion(card.front),
-                "back": richia_fusion(card.back),
+                "front": card.front,
+                "back": card.back,
             }
             if card.paused:
                 card_dict["paused"] = True
@@ -132,6 +164,7 @@ class App:
             log.info("ankirus stopped")
 
         await self.nodejs_agent.agent_close()
+        self.cachedb.close()
 
 
 async def main() -> None:

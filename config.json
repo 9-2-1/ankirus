@@ -2,6 +2,8 @@
   "media": "media/",
   "userprofile": "/anki/arigi/",
   "tmp_db": "tmp-collection.anki2",
+  "cachedb": "cache.db",
   "port": 24032,
-  "cache_ttl": 86400
+  "cache_ttl": 86400,
+  "banned_words": "banned_words.txt"
 }
