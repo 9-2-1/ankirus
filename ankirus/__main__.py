@@ -62,6 +62,8 @@ class App:
             ]
             self.banned_words.sort(key=len, reverse=True)
         self.cachedb = sqlite3.connect(self.config.get("cachedb"))
+        self.cachedb.execute("PRAGMA journal_mode = WAL;")
+        self.cachedb.execute("PRAGMA locking_mode = EXCLUSIVE;")
         self.cachedb.execute(
             "CREATE TABLE IF NOT EXISTS sanitize (input TEXT PRIMARY KEY, output TEXT) WITHOUT ROWID"
         )
