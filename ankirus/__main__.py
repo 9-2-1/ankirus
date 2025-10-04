@@ -61,8 +61,36 @@ class App:
         )
         self.cachedb.commit()
 
-    async def sanitize(self, text: str) -> str:
-        return await self.nodejs_agent.purify(text)
+    async def sanitize_cached(self, text: str) -> str:
+        input_text = text
+        cacherow = self.cachedb.execute(
+            "SELECT output FROM sanitize WHERE input = ?", (input_text,)
+        ).fetchone()
+        if cacherow:
+            text = cast(str, cacherow[0])
+            if text == "":
+                text = input_text
+            return text
+        text = await self.nodejs_agent.purify(text)
+        while True:
+            old_text = text
+            for word in self.banned_words:
+                text = text.replace(word, "")
+            if old_text == text:
+                break
+        self.cachedb.execute(
+            "INSERT INTO sanitize (input, output) VALUES (?, ?)",
+            (input_text, "" if input_text == text else text),
+        )
+        self.cachedb.commit()
+        return text
+
+    async def handle_count_due_cards(self, request: web.Request) -> web.Response:
+        now = int(time.time())
+        due_count = len(
+            [card for card in await self.ankireader.read() if card.due <= now]
+        )
+        return web.Response(text=str(due_count))
 
     async def handle_cards(self, request: web.Request) -> web.Response:
         cards = await self.ankireader.read(sanitize=self.sanitize)
@@ -120,6 +148,7 @@ class App:
         app = web.Application()
         app.router.add_get("/", self.handle_index)
         app.router.add_get("/cards/", self.handle_cards)
+        app.router.add_get("/cards/due/", self.handle_count_due_cards)
         app.router.add_static("/static/", "web")
         app.router.add_static(
             "/", self.config.get("userprofile") + self.config.get("media")
