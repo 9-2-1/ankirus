@@ -53,6 +53,13 @@ class App:
             self.config.get("userprofile") + "collection.anki2", self.config
         )
         self.nodejs_agent = NodeJSAgent()
+        self.cachedb = sqlite3.connect(self.config.get("cachedb"))
+        self.cachedb.execute("PRAGMA journal_mode = WAL;")
+        self.cachedb.execute("PRAGMA locking_mode = EXCLUSIVE;")
+        self.cachedb.execute(
+            "CREATE TABLE IF NOT EXISTS sanitize (input TEXT PRIMARY KEY, output TEXT) WITHOUT ROWID"
+        )
+        self.cachedb.commit()
 
     async def sanitize(self, text: str) -> str:
         return await self.nodejs_agent.purify(text)
