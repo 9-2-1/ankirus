@@ -41,6 +41,12 @@ async def load_anki_data(
     # creation_stamp, creation date
     # It is very confusing. Only deep investigation
     crt = col.crt
+    tzoffs = col.get_config("creationOffset")
+    if not isinstance(tzoffs, int):
+        tzoffs = 0
+    rollover = col.get_config("rollover")
+    if not isinstance(rollover, int):
+        rollover = 0
 
     cards: list[Card] = []
 
@@ -99,7 +105,11 @@ async def load_anki_data(
         elif card.queue == QUEUE_TYPE_LRN or card.queue == QUEUE_TYPE_PREVIEW:
             due = card.due
         elif card.queue == QUEUE_TYPE_REV or card.queue == QUEUE_TYPE_DAY_LEARN_RELEARN:
-            due = crt + card.due * 24 * 60 * 60
+            due = (
+                ((crt - tzoffs * 60) // (24 * 60 * 60) + card.due) * (24 * 60 * 60)  # 时区
+                + tzoffs * 60  # 时区偏移
+                + rollover * 60 * 60  # 跨天时间节点(小时)
+            )
         else:
             due = 0xFFFFFFFFFFFFFFFF  # never due
 
