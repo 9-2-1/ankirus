@@ -22,7 +22,8 @@ class Card:
     decay: float
 
     # other
-    paused: bool = False
+    paused: bool
+    due: int  # Unix Timestamp
 
 
 async def load_anki_data(
@@ -64,6 +65,8 @@ async def load_anki_data(
 
         paused = card.queue == QUEUE_TYPE_SUSPENDED
 
+        due = card.due
+
         cards.append(
             Card(
                 cid=cid,
@@ -75,6 +78,7 @@ async def load_anki_data(
                 stability=stability,
                 decay=decay,
                 paused=paused,
+                due=due,
             )
         )
 

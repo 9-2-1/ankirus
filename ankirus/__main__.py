@@ -87,10 +87,18 @@ class App:
             if old_text == text:
                 break
         self.cachedb.execute(
-            "INSERT INTO sanitize (input, output) VALUES (?, ?)", (input_text, "" if input_text == text else text)
+            "INSERT INTO sanitize (input, output) VALUES (?, ?)",
+            (input_text, "" if input_text == text else text),
         )
         self.cachedb.commit()
         return text
+
+    async def handle_count_due_cards(self, request: web.Request) -> web.Response:
+        now = int(time.time())
+        due_count = len(
+            [card for card in await self.ankireader.read() if card.due <= now]
+        )
+        return web.Response(text=str(due_count))
 
     async def handle_cards(self, request: web.Request) -> web.Response:
         cards = await self.ankireader.read(sanitize=self.sanitize_cached)
@@ -148,6 +156,7 @@ class App:
         app = web.Application()
         app.router.add_get("/", self.handle_index)
         app.router.add_get("/cards/", self.handle_cards)
+        app.router.add_get("/cards/due/", self.handle_count_due_cards)
         app.router.add_static("/static/", "web")
         app.router.add_static(
             "/", self.config.get("userprofile") + self.config.get("media")
