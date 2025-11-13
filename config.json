@@ -1,6 +1,6 @@
 {
   "media": "media/",
-  "userprofile": "/anki/arigi/",
+  "userprofile": "/home/richia/ankiserver/arigi/",
   "tmp_db": "tmp-collection.anki2",
   "port": 24032,
   "cache_ttl": 86400
