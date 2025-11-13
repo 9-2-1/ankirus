@@ -30,10 +30,7 @@ class NodeJSAgent:
 
     async def agent_run(self) -> None:
         self.process = await subproc.create_subprocess_exec(
-            "node",
-            "ankirus_nodejs",
-            stdin=subproc.PIPE,
-            stdout=subproc.PIPE,
+            "node", "ankirus_nodejs", stdin=subproc.PIPE, stdout=subproc.PIPE
         )
         asyncio.create_task(self.handle_stdout())
 

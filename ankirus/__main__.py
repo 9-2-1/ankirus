@@ -118,7 +118,7 @@ class App:
             "Cache-Control": "no-cache",
             "Content-Type": "application/json",
         }
-        if int(cache_timestamp) <= int(req_timestamp):
+        if int(cache_timestamp) == int(req_timestamp):
             return web.Response(status=304, headers=headers)
 
         response_arr: list[Union[ReplyGroup, ReplyCard]] = []

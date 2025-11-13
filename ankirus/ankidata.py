@@ -106,7 +106,8 @@ async def load_anki_data(
             due = card.due
         elif card.queue == QUEUE_TYPE_REV or card.queue == QUEUE_TYPE_DAY_LEARN_RELEARN:
             due = (
-                ((crt - tzoffs * 60) // (24 * 60 * 60) + card.due) * (24 * 60 * 60)  # 时区
+                ((crt - tzoffs * 60) // (24 * 60 * 60) + card.due)
+                * (24 * 60 * 60)  # 时区
                 + tzoffs * 60  # 时区偏移
                 + rollover * 60 * 60  # 跨天时间节点(小时)
             )
