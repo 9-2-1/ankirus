@@ -49,6 +49,7 @@ function convertOklabToLrgb({ l, a, b }: { l: number; a: number; b: number }) {
       -0.0041960761386756 * L - 0.7034186179359362 * M + 1.7076146940746117 * S,
   };
 }
+
 function convertLrgbToOklab({ r, g, b }: { r: number; g: number; b: number }) {
   let L = Math.cbrt(
     0.412221469470763 * r + 0.5363325372617348 * g + 0.0514459932675022 * b,
