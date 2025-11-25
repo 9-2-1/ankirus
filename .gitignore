@@ -8,3 +8,4 @@ treemap.html
 ankirus_nodejs/*.js
 web/*.js
 banned_words.txt
+dist/
