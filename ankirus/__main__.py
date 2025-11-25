@@ -54,43 +54,64 @@ class App:
             self.config.get("userprofile") + "collection.anki2", self.config
         )
         self.nodejs_agent = NodeJSAgent()
+        
+        # 根据配置决定是否启用敏感词过滤
+        self.enable_sensitive_word_filter = self.config.get("enable_sensitive_word_filter", True)
         self.banned_words = []
-        with open(self.config.get("banned_words"), "r", encoding="utf-8") as f:
-            self.banned_words = f.read().splitlines()
-            self.banned_words = [
-                word.strip() for word in self.banned_words if word.strip() != ""
-            ]
-            self.banned_words.sort(key=len, reverse=True)
-        self.cachedb = sqlite3.connect(self.config.get("cachedb"))
-        self.cachedb.execute("PRAGMA journal_mode = WAL;")
-        self.cachedb.execute("PRAGMA locking_mode = EXCLUSIVE;")
-        self.cachedb.execute(
-            "CREATE TABLE IF NOT EXISTS sanitize (input TEXT PRIMARY KEY, output TEXT) WITHOUT ROWID"
-        )
-        self.cachedb.commit()
+        if self.enable_sensitive_word_filter:
+            with open(self.config.get("banned_words"), "r", encoding="utf-8") as f:
+                self.banned_words = f.read().splitlines()
+                self.banned_words = [
+                    word.strip() for word in self.banned_words if word.strip() != ""
+                ]
+                self.banned_words.sort(key=len, reverse=True)
+        
+        # 根据配置决定是否启用缓存
+        self.enable_cache = self.config.get("enable_cache", True)
+        self.cachedb = None
+        if self.enable_cache:
+            self.cachedb = sqlite3.connect(self.config.get("cachedb"))
+            self.cachedb.execute("PRAGMA journal_mode = WAL;")
+            self.cachedb.execute("PRAGMA locking_mode = EXCLUSIVE;")
+            self.cachedb.execute(
+                "CREATE TABLE IF NOT EXISTS sanitize (input TEXT PRIMARY KEY, output TEXT) WITHOUT ROWID"
+            )
+            self.cachedb.commit()
 
     async def sanitize_cached(self, text: str) -> str:
         input_text = text
-        cacherow = self.cachedb.execute(
-            "SELECT output FROM sanitize WHERE input = ?", (input_text,)
-        ).fetchone()
-        if cacherow:
-            text = cast(str, cacherow[0])
-            if text == "":
-                text = input_text
-            return text
+        
+        # 检查缓存
+        if self.enable_cache and self.cachedb:
+            cacherow = self.cachedb.execute(
+                "SELECT output FROM sanitize WHERE input = ?", (input_text,)
+            ).fetchone()
+            if cacherow:
+                text = cast(str, cacherow[0])
+                if text == "":
+                    text = input_text
+                return text
+        
+        # 基础净化
         text = await self.nodejs_agent.purify(text)
-        while True:
-            old_text = text
-            for word in self.banned_words:
-                text = text.replace(word, "")
-            if old_text == text:
-                break
-        self.cachedb.execute(
-            "INSERT INTO sanitize (input, output) VALUES (?, ?)",
-            (input_text, "" if input_text == text else text),
-        )
-        self.cachedb.commit()
+        
+        # 敏感词过滤
+        if self.enable_sensitive_word_filter:
+            while True:
+                old_text = text
+                for word in self.banned_words:
+                    text = text.replace(word, "")
+                if old_text == text:
+                    break
+        
+        # 保存到缓存
+        if self.enable_cache and self.cachedb:
+            self.cachedb.execute(
+                "INSERT INTO sanitize (input, output) VALUES (?, ?)",
+                (input_text, "" if input_text == text else text),
+            )
+            self.cachedb.commit()
+        
         return text
 
     async def handle_count_due_cards(self, request: web.Request) -> web.Response:
@@ -147,8 +168,18 @@ class App:
         response.enable_compression(strategy=9)
         return response
 
-    async def handle_index(self, request: web.Request) -> web.FileResponse:
-        return web.FileResponse("web/index.html")
+    async def handle_index(self, request: web.Request) -> web.Response:
+        # 根据配置决定是否启用统计
+        enable_statistics = self.config.get("enable_statistics", True)
+        
+        with open("web/index.html", "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # 如果禁用统计，移除统计脚本
+        if not enable_statistics:
+            content = content.replace('<script src="/ms-clarity.js"></script>', '')
+        
+        return web.Response(text=content, content_type="text/html")
 
     async def run(self) -> None:
         await self.nodejs_agent.agent_run()
@@ -175,7 +206,8 @@ class App:
             log.info("ankirus stopped")
 
         await self.nodejs_agent.agent_close()
-        self.cachedb.close()
+        if self.cachedb:
+            self.cachedb.close()
 
 
 async def main() -> None:

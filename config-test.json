@@ -1,9 +1,12 @@
 {
-  "media": "collection.media\\",
-  "userprofile": "C:\\Users\\11951\\AppData\\Roaming\\Anki2\\arigi\\",
+  "media": "collection.media/",
+  "userprofile": "C:/Users/11951/AppData/Roaming/Anki2/arigi/",
   "tmp_db": "tmp-collection.anki2",
   "cachedb": "cache-test.db",
   "port": 24032,
   "cache_ttl": 86400,
-  "banned_words": "banned_words.txt"
+  "banned_words": "banned_words.txt",
+  "enable_sensitive_word_filter": true,
+  "enable_statistics": true,
+  "enable_cache": true
 }
