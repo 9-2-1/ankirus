@@ -15,11 +15,12 @@ import './styles/responsive.css';
  * Main application component
  */
 export function App(): React.JSX.Element {
-  const { cards, loading, error } = useCardData();
+  const { cards, loading, error, refetch } = useCardData();
   const { isWideScreen } = useResponsive();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [selectedGroupPath, setSelectedGroupPath] = useState<string[] | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [showErrorNotification, setShowErrorNotification] = useState<boolean>(false);
 
   // Build group hierarchy from card data
   const groupHierarchy: CardGroup | null = cards.length > 0 ? buildGroupHierarchy(cards) : null;
@@ -71,9 +72,34 @@ export function App(): React.JSX.Element {
     setSelectedCardId(null);
   };
 
+  const handleRefresh = async (): Promise<void> => {
+    try {
+      await refetch();
+      // If refresh succeeds, hide any existing error notification
+      setShowErrorNotification(false);
+    } catch {
+      // Show error notification in the corner
+      setShowErrorNotification(true);
+    }
+  };
+
+  const handleCloseErrorNotification = (): void => {
+    setShowErrorNotification(false);
+  };
+
+  // Auto-hide error notification after 5 seconds
+  React.useEffect(() => {
+    if (showErrorNotification) {
+      const timer = setTimeout(() => {
+        setShowErrorNotification(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showErrorNotification]);
+
   return (
     <>
-      <Layout isWideScreen={isWideScreen}>
+      <Layout isWideScreen={isWideScreen} onRefresh={handleRefresh} showRefreshButton={!loading}>
         <TreeMap
           group={groupHierarchy}
           selectedGroupPath={selectedGroupPath}
@@ -93,6 +119,18 @@ export function App(): React.JSX.Element {
         cardCount={cards.length}
         isVisible={PERFORMANCE_CONFIG.ENABLE_PERFORMANCE_MONITOR}
       />
+
+      {/* Error notification */}
+      {showErrorNotification && (
+        <div className="error-notification">
+          <div className="error-content">
+            <span className="error-message">Failed to refresh data: {error}</span>
+            <button className="error-close" onClick={handleCloseErrorNotification} title="Close">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

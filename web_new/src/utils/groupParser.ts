@@ -122,6 +122,9 @@ function calculateGroupStatistics(group: CardGroup): void {
 
       if (totalWeight > 0) {
         group.averageRetention = (currentWeightedRetention + weightedRetention) / totalWeight;
+      } else {
+        // If parent has no direct cards, use subgroup's average
+        group.averageRetention = subgroup.averageRetention;
       }
     }
   }

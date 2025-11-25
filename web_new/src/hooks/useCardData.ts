@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ApiResponseItem, CardData } from '../types/card';
 import { parseApiResponse } from '../utils/groupParser';
 
@@ -10,29 +10,29 @@ export function useCardData() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchCardData(): Promise<void> {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchCardData = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const response = await fetch('/cards/');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch cards: ${response.status}`);
-        }
-
-        const data: ApiResponseItem[] = await response.json();
-        const parsedCards = parseApiResponse(data);
-        setCards(parsedCards);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      } finally {
-        setLoading(false);
+      const response = await fetch('/cards/');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch cards: ${response.status}`);
       }
-    }
 
-    fetchCardData();
+      const data: ApiResponseItem[] = await response.json();
+      const parsedCards = parseApiResponse(data);
+      setCards(parsedCards);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { cards, loading, error };
+  useEffect(() => {
+    fetchCardData();
+  }, [fetchCardData]);
+
+  return { cards, loading, error, refetch: fetchCardData };
 }

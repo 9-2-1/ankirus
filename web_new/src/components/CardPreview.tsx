@@ -139,9 +139,7 @@ function GroupList({
       >
         <div className="group-expand">
           {hasSubgroups && (
-            <span className={`expand-icon ${group.isExpanded ? 'expanded' : 'collapsed'}`}>
-              {group.isExpanded ? 'v' : '>'}
-            </span>
+            <span className={`expand-icon ${group.isExpanded ? 'expanded' : 'collapsed'}`} />
           )}
         </div>
         <div className="group-name">{group.name}</div>
