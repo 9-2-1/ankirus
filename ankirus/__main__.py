@@ -54,9 +54,11 @@ class App:
             self.config.get("userprofile") + "collection.anki2", self.config
         )
         self.nodejs_agent = NodeJSAgent()
-        
+
         # 根据配置决定是否启用敏感词过滤
-        self.enable_sensitive_word_filter = self.config.get("enable_sensitive_word_filter", True)
+        self.enable_sensitive_word_filter = self.config.get(
+            "enable_sensitive_word_filter", True
+        )
         self.banned_words = []
         if self.enable_sensitive_word_filter:
             with open(self.config.get("banned_words"), "r", encoding="utf-8") as f:
@@ -65,7 +67,7 @@ class App:
                     word.strip() for word in self.banned_words if word.strip() != ""
                 ]
                 self.banned_words.sort(key=len, reverse=True)
-        
+
         # 根据配置决定是否启用缓存
         self.enable_cache = self.config.get("enable_cache", True)
         self.cachedb = None
@@ -80,7 +82,7 @@ class App:
 
     async def sanitize_cached(self, text: str) -> str:
         input_text = text
-        
+
         # 检查缓存
         if self.enable_cache and self.cachedb:
             cacherow = self.cachedb.execute(
@@ -91,10 +93,10 @@ class App:
                 if text == "":
                     text = input_text
                 return text
-        
+
         # 基础净化
         text = await self.nodejs_agent.purify(text)
-        
+
         # 敏感词过滤
         if self.enable_sensitive_word_filter:
             while True:
@@ -103,7 +105,7 @@ class App:
                     text = text.replace(word, "")
                 if old_text == text:
                     break
-        
+
         # 保存到缓存
         if self.enable_cache and self.cachedb:
             self.cachedb.execute(
@@ -111,7 +113,7 @@ class App:
                 (input_text, "" if input_text == text else text),
             )
             self.cachedb.commit()
-        
+
         return text
 
     async def handle_count_due_cards(self, request: web.Request) -> web.Response:
@@ -171,14 +173,14 @@ class App:
     async def handle_index(self, request: web.Request) -> web.Response:
         # 根据配置决定是否启用统计
         enable_statistics = self.config.get("enable_statistics", True)
-        
+
         with open("web/index.html", "r", encoding="utf-8") as f:
             content = f.read()
-        
+
         # 如果禁用统计，移除统计脚本
         if not enable_statistics:
-            content = content.replace('<script src="/ms-clarity.js"></script>', '')
-        
+            content = content.replace('<script src="/ms-clarity.js"></script>', "")
+
         return web.Response(text=content, content_type="text/html")
 
     async def run(self) -> None:
