@@ -1,9 +1,7 @@
 import readline from "node:readline";
 import { purify } from "./purify.js";
 
-const rl = readline.createInterface({
-  input: process.stdin,
-});
+const rl = readline.createInterface({ input: process.stdin });
 const linebuffer: Array<string> = [];
 const linewaiter: Array<(line: string) => void> = [];
 rl.on("line", (line) => {

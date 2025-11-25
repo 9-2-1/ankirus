@@ -18,9 +18,7 @@ type Card = {
   st_value: number;
 };
 
-type ReplyGroup = {
-  group: Array<string>;
-};
+type ReplyGroup = { group: Array<string> };
 
 type ReplyCard = {
   cid: number;
