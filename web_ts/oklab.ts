@@ -10,11 +10,7 @@ function convertRgbToLrgb({ r, g, b }: { r: number; g: number; b: number }) {
     }
     return (Math.sign(c) || 1) * Math.pow((abs + 0.055) / 1.055, 2.4);
   }
-  return {
-    r: fn(r),
-    g: fn(g),
-    b: fn(b),
-  };
+  return { r: fn(r), g: fn(g), b: fn(b) };
 }
 
 const convertLrgbToRgb = ({ r, g, b }: { r: number; g: number; b: number }) => {
@@ -25,11 +21,7 @@ const convertLrgbToRgb = ({ r, g, b }: { r: number; g: number; b: number }) => {
     }
     return c * 12.92;
   }
-  return {
-    r: fn(r),
-    g: fn(g),
-    b: fn(b),
-  };
+  return { r: fn(r), g: fn(g), b: fn(b) };
 };
 
 // https://github.com/Evercoder/culori/blob/main/src/oklab/convertOklabToLrgb.js

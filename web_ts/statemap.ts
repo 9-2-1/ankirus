@@ -14,12 +14,7 @@ type RectItem =
       group: CardGroup;
       cardsOnly: true;
     }
-  | {
-      mode: "card";
-      weight: number;
-      value: number;
-      card: Card;
-    };
+  | { mode: "card"; weight: number; value: number; card: Card };
 
 class StateMap {
   private svg: SVGSVGElement;
