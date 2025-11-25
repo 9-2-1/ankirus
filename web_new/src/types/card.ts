@@ -31,3 +31,13 @@ export interface CardGroup {
   totalCards: number;
   averageRetention: number;
 }
+
+// Group list item for the hierarchical group display
+export interface GroupListItem {
+  name: string;
+  path: string[];
+  totalCards: number;
+  averageRetention: number;
+  subgroups: GroupListItem[];
+  isExpanded: boolean;
+}

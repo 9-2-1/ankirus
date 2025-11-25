@@ -1,4 +1,4 @@
-- 鼓励定义容易理解/调试的函数和类，使代码易于人类阅读。
+- 鼓励定义容易理解/调试的函数和类/子组件，使代码易于人类阅读。
   - 通用，大量重复的操作 `const x = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);` -> `const [x, _] = quadEqSolve(a, b, c);` `let fullpath = file.drive + file.path + file.name;` -> `let fullpath = fileFullpath(file); // file.fullpath() 甚至 file.fullpath (getter)`
   - 复杂的操作
     ```

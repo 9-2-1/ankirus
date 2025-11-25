@@ -4,23 +4,39 @@ import { CardGroup } from '../types/card';
 import { TreeMapNode, TreeMapLayout, TreeMapRect } from '../types/treemap';
 import { measurePerformance } from '../utils/performance';
 import { PERFORMANCE_CONFIG } from '../utils/performanceConfig';
+import { findGroupByPath } from '../utils/groupListBuilder';
 
 /**
  * Hook to calculate TreeMap layout using D3.js
  * Each card becomes a block, grouped by hierarchy
  */
-export function useTreeMap(group: CardGroup, width: number, height: number): TreeMapLayout | null {
-  // Create a stable key for memoization based on group structure
+export function useTreeMap(
+  group: CardGroup,
+  width: number,
+  height: number,
+  selectedGroupPath: string[] | null = null
+): TreeMapLayout | null {
+  // Create a stable key for memoization based on group structure and selected group
   const groupKey = useMemo(() => {
-    return JSON.stringify({ totalCards: group.totalCards, path: group.path, name: group.name });
-  }, [group.totalCards, group.path, group.name]);
+    return JSON.stringify({
+      totalCards: group.totalCards,
+      path: group.path,
+      name: group.name,
+      selectedGroupPath,
+    });
+  }, [group.totalCards, group.path, group.name, selectedGroupPath]);
 
   return useMemo(() => {
     if (width === 0 || height === 0) return null;
 
     return measurePerformance(() => {
+      // Filter group if a specific group is selected
+      const displayGroup = selectedGroupPath
+        ? findGroupByPath(group, selectedGroupPath) || group
+        : group;
+
       // Convert group hierarchy to D3 hierarchy with individual cards
-      const rootNode = convertGroupToHierarchyWithCards(group);
+      const rootNode = convertGroupToHierarchyWithCards(displayGroup);
 
       if (!rootNode) return null;
 

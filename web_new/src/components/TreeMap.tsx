@@ -16,6 +16,7 @@ import './TreeMap.css';
 
 interface TreeMapProps {
   group: CardGroup;
+  selectedGroupPath: string[] | null;
   onCardSelect: (cardId: string | null) => void;
   selectedCardId: string | null;
 }
@@ -23,7 +24,12 @@ interface TreeMapProps {
 /**
  * TreeMap visualization component using D3.js
  */
-export function TreeMap({ group, onCardSelect, selectedCardId }: TreeMapProps): React.JSX.Element {
+export function TreeMap({
+  group,
+  selectedGroupPath,
+  onCardSelect,
+  selectedCardId,
+}: TreeMapProps): React.JSX.Element {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
@@ -64,7 +70,7 @@ export function TreeMap({ group, onCardSelect, selectedCardId }: TreeMapProps): 
   }, [dimensions.width, dimensions.height]);
 
   // Calculate TreeMap layout with loading state
-  const treeMapLayout = useTreeMap(group, dimensions.width, dimensions.height);
+  const treeMapLayout = useTreeMap(group, dimensions.width, dimensions.height, selectedGroupPath);
 
   // Show loading state when TreeMap is being calculated
   useEffect(() => {

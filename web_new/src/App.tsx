@@ -3,6 +3,7 @@ import { CardGroup, CardData } from './types/card';
 import { useCardData } from './hooks/useCardData';
 import { useResponsive } from './hooks/useResponsive';
 import { buildGroupHierarchy } from './utils/groupParser';
+import { buildGroupList } from './utils/groupListBuilder';
 import { Layout } from './components/Layout';
 import { TreeMap } from './components/TreeMap';
 import { CardPreview } from './components/CardPreview';
@@ -17,6 +18,8 @@ export function App(): React.JSX.Element {
   const { cards, loading, error } = useCardData();
   const { isWideScreen } = useResponsive();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [selectedGroupPath, setSelectedGroupPath] = useState<string[] | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Build group hierarchy from card data
   const groupHierarchy: CardGroup | null = cards.length > 0 ? buildGroupHierarchy(cards) : null;
@@ -26,6 +29,9 @@ export function App(): React.JSX.Element {
     ? cards.find(card => card.uniqueId === selectedCardId) || null
     : null;
 
+  // Build group list for display
+  const groupList = groupHierarchy ? buildGroupList(groupHierarchy, expandedGroups) : null;
+
   if (loading) {
     return <div className="loading">Loading card data...</div>;
   }
@@ -34,19 +40,54 @@ export function App(): React.JSX.Element {
     return <div className="error">Error: {error}</div>;
   }
 
-  if (!groupHierarchy) {
+  if (!groupHierarchy || !groupList) {
     return <div className="no-data">No card data available</div>;
   }
+
+  // Event handlers
+  const handleGroupSelect = (groupPath: string[] | null): void => {
+    setSelectedGroupPath(groupPath);
+    setSelectedCardId(null); // Clear card selection when group changes
+  };
+
+  const handleCardSelect = (cardId: string | null): void => {
+    setSelectedCardId(cardId);
+  };
+
+  const handleGroupToggle = (groupPath: string[]): void => {
+    const groupKey = groupPath.join('::');
+    const newExpandedGroups = new Set(expandedGroups);
+
+    if (newExpandedGroups.has(groupKey)) {
+      newExpandedGroups.delete(groupKey);
+    } else {
+      newExpandedGroups.add(groupKey);
+    }
+
+    setExpandedGroups(newExpandedGroups);
+  };
+
+  const handleBackToGroupList = (): void => {
+    setSelectedCardId(null);
+  };
 
   return (
     <>
       <Layout isWideScreen={isWideScreen}>
         <TreeMap
           group={groupHierarchy}
-          onCardSelect={setSelectedCardId}
+          selectedGroupPath={selectedGroupPath}
+          onCardSelect={handleCardSelect}
           selectedCardId={selectedCardId}
         />
-        <CardPreview card={selectedCard} />
+        <CardPreview
+          card={selectedCard}
+          groupList={groupList}
+          selectedGroupPath={selectedGroupPath}
+          onGroupSelect={handleGroupSelect}
+          onGroupToggle={handleGroupToggle}
+          onBackToGroupList={handleBackToGroupList}
+        />
       </Layout>
       <PerformanceMonitor
         cardCount={cards.length}
