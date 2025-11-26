@@ -144,14 +144,19 @@ class App:
         return response
 
     async def handle_index(self, request: web.Request) -> web.FileResponse:
-        return web.FileResponse("web/index.html")
+        return web.FileResponse("web_new/dist/index.html")
+
+    async def handle_old_index(self, request: web.Request) -> web.FileResponse:
+        return web.FileResponse("web_old/index.html")
 
     async def run(self) -> None:
         app = web.Application()
         app.router.add_get("/", self.handle_index)
+        app.router.add_get("/web_old/", self.handle_old_index)
         app.router.add_get("/cards/", self.handle_cards)
         app.router.add_get("/cards/due/", self.handle_count_due_cards)
-        app.router.add_static("/static/", "web")
+        app.router.add_static("/assets/", "web_new/dist/assets")
+        app.router.add_static("/web_old/", "web_old")
         app.router.add_static(
             "/", self.config.get("userprofile") + self.config.get("media")
         )
