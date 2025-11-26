@@ -20,8 +20,8 @@ export function buildGroupList(
   };
 
   // Recursively build subgroups
-  if (group.subgroups.size > 0) {
-    for (const subgroup of group.subgroups.values()) {
+  if (group.subgroups.length > 0) {
+    for (const subgroup of group.subgroups) {
       listItem.subgroups.push(buildGroupList(subgroup, expandedGroups));
     }
   }
@@ -35,7 +35,7 @@ export function buildGroupList(
 export function getAllGroups(group: CardGroup): CardGroup[] {
   const groups: CardGroup[] = [group];
 
-  for (const subgroup of group.subgroups.values()) {
+  for (const subgroup of group.subgroups) {
     groups.push(...getAllGroups(subgroup));
   }
 
@@ -52,10 +52,11 @@ export function findGroupByPath(group: CardGroup, path: string[]): CardGroup | n
 
   let currentGroup = group;
   for (const segment of path) {
-    if (!currentGroup.subgroups.has(segment)) {
+    const subgroup = currentGroup.subgroups.find(g => g.name === segment);
+    if (!subgroup) {
       return null;
     }
-    currentGroup = currentGroup.subgroups.get(segment)!;
+    currentGroup = subgroup;
   }
 
   return currentGroup;

@@ -76,34 +76,6 @@ body {
   color: #666;
 }
 
-/* Refresh button styles */
-.refresh-button {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 1000;
-  padding: 8px 12px;
-  background-color: #1976d2;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition:
-    background-color 0.2s,
-    transform 0.2s;
-}
-
-.refresh-button:hover {
-  background-color: #1565c0;
-  transform: scale(1.05);
-}
-
-.refresh-button:active {
-  transform: scale(0.95);
-}
-
 /* Error notification styles */
 .error-notification {
   position: fixed;

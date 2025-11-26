@@ -217,10 +217,8 @@ export function TreeMap({
       .attr('width', d => d.x1 - d.x0)
       .attr('height', d => d.y1 - d.y0)
       .attr('fill', 'none')
-      .attr('stroke', 'white')
-      .attr('stroke-width', 2)
-      .attr('stroke-dasharray', '6,3')
-      .attr('stroke-opacity', 0.8);
+      .attr('stroke', 'black')
+      .attr('stroke-width', 3);
   }, [treeMapLayout, selectedCardId, handleNodeClick]);
 
   return (

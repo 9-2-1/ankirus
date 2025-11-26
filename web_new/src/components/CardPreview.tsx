@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { CardData, GroupListItem } from '../types/card';
+import { interpolateColor, getTextColor, rgbToCss } from '../utils/colorConfig';
+import { CardContent } from './CardContent';
 import './CardPreview.css';
 
 interface CardPreviewProps {
@@ -9,6 +11,8 @@ interface CardPreviewProps {
   onGroupSelect: (groupPath: string[] | null) => void;
   onGroupToggle: (groupPath: string[]) => void;
   onBackToGroupList: () => void;
+  onRefresh?: () => void;
+  showRefreshButton?: boolean;
 }
 
 /**
@@ -21,24 +25,52 @@ export function CardPreview({
   onGroupSelect,
   onGroupToggle,
   onBackToGroupList,
+  onRefresh,
+  showRefreshButton = true,
 }: CardPreviewProps): React.JSX.Element {
   const [showAnswer, setShowAnswer] = useState<boolean>(false);
 
   // Card preview mode
   if (card) {
+    const retentionColor = interpolateColor(card.retentionRate);
+    const textColor = getTextColor(card.retentionRate);
+    const refreshButton = showRefreshButton && onRefresh && (
+      <button className="refresh-button" onClick={onRefresh} title="Refresh data">
+        🔄
+      </button>
+    );
+
     return (
       <div className="card-preview">
         <div className="preview-header">
           <div className="header-row">
             <h3>Card Details</h3>
-            <button className="back-button" onClick={onBackToGroupList}>
-              ← Back to Groups
-            </button>
+            <div className="header-actions">
+              <button className="back-button" onClick={onBackToGroupList}>
+                ← Back to Groups
+              </button>
+              {refreshButton}
+            </div>
           </div>
           <div className="card-stats">
-            <span className="stat">Retention: {Math.round(card.retentionRate * 100)}%</span>
-            <span className="stat">Difficulty: {card.difficulty.toFixed(2)}</span>
-            <span className="stat">Stability: {card.stability.toFixed(2)}</span>
+            <span
+              className="stat"
+              style={{ backgroundColor: rgbToCss(retentionColor), color: rgbToCss(textColor) }}
+            >
+              Retention: {Math.round(card.retentionRate * 100)}%
+            </span>
+            <span
+              className="stat"
+              style={{ backgroundColor: rgbToCss(retentionColor), color: rgbToCss(textColor) }}
+            >
+              Difficulty: {card.difficulty.toFixed(2)}
+            </span>
+            <span
+              className="stat"
+              style={{ backgroundColor: rgbToCss(retentionColor), color: rgbToCss(textColor) }}
+            >
+              Stability: {card.stability.toFixed(2)}
+            </span>
             {card.paused && <span className="stat paused">Paused</span>}
           </div>
 
@@ -53,7 +85,7 @@ export function CardPreview({
         <div className="card-content-area">
           <div className="card-front">
             <h4>Front</h4>
-            <div className="card-content" dangerouslySetInnerHTML={{ __html: card.front }} />
+            <CardContent content={card.front} />
           </div>
 
           <button className="show-answer-btn" onClick={() => setShowAnswer(!showAnswer)}>
@@ -63,7 +95,7 @@ export function CardPreview({
           {showAnswer && (
             <div className="card-back">
               <h4>Back</h4>
-              <div className="card-content" dangerouslySetInnerHTML={{ __html: card.back }} />
+              <CardContent content={card.back} />
             </div>
           )}
         </div>
@@ -71,11 +103,20 @@ export function CardPreview({
     );
   }
 
+  const refreshButton = showRefreshButton && onRefresh && (
+    <button className="refresh-button" onClick={onRefresh} title="Refresh data">
+      🔄
+    </button>
+  );
+
   // Group list mode
   return (
     <div className="card-preview group-list">
       <div className="preview-header">
-        <h3>Card Groups</h3>
+        <div className="header-row">
+          <h3>Card Groups</h3>
+          {refreshButton}
+        </div>
         <div className="group-list-header">
           <span className="header-name">Name</span>
           <span className="header-count">Total</span>
@@ -144,7 +185,13 @@ function GroupList({
         </div>
         <div className="group-name">{group.name}</div>
         <div className="group-count">{group.totalCards}</div>
-        <div className="group-retention">
+        <div
+          className="group-retention"
+          style={{
+            color: group.totalCards > 0 ? rgbToCss(getTextColor(group.averageRetention)) : '#666',
+            fontWeight: group.totalCards > 0 ? 'bold' : 'normal',
+          }}
+        >
           {group.totalCards > 0 ? `${(group.averageRetention * 100).toFixed(2)}%` : '-'}
         </div>
       </div>

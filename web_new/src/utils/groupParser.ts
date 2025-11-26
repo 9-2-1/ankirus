@@ -55,7 +55,7 @@ export function buildGroupHierarchy(cards: CardData[]): CardGroup {
     name: 'root',
     path: [],
     cards: [],
-    subgroups: new Map(),
+    subgroups: [],
     totalCards: 0,
     averageRetention: 0,
   };
@@ -68,19 +68,21 @@ export function buildGroupHierarchy(cards: CardData[]): CardGroup {
       const groupName = card.groupPath[i];
       const groupPath = card.groupPath.slice(0, i + 1);
 
-      if (groupName && !currentGroup.subgroups.has(groupName)) {
-        currentGroup.subgroups.set(groupName, {
-          name: groupName,
-          path: groupPath,
-          cards: [],
-          subgroups: new Map(),
-          totalCards: 0,
-          averageRetention: 0,
-        });
-      }
-
       if (groupName) {
-        currentGroup = currentGroup.subgroups.get(groupName)!;
+        // Find or create subgroup
+        let subgroup = currentGroup.subgroups.find(g => g.name === groupName);
+        if (!subgroup) {
+          subgroup = {
+            name: groupName,
+            path: groupPath,
+            cards: [],
+            subgroups: [],
+            totalCards: 0,
+            averageRetention: 0,
+          };
+          currentGroup.subgroups.push(subgroup);
+        }
+        currentGroup = subgroup;
       }
     }
 
@@ -91,6 +93,9 @@ export function buildGroupHierarchy(cards: CardData[]): CardGroup {
   // Calculate statistics for all groups
   calculateGroupStatistics(rootGroup);
 
+  // Sort subgroups by name for consistent ordering
+  sortGroupHierarchy(rootGroup);
+
   return rootGroup;
 }
 
@@ -98,34 +103,39 @@ export function buildGroupHierarchy(cards: CardData[]): CardGroup {
  * Recursively calculate statistics for groups
  */
 function calculateGroupStatistics(group: CardGroup): void {
-  group.totalCards = group.cards.length;
+  let totalRetention = 0;
+  let totalCards = 0;
 
-  // Calculate average retention for this group's direct cards
-  if (group.cards.length > 0) {
-    const totalRetention = group.cards.reduce((sum, card) => sum + card.retentionRate, 0);
-    group.averageRetention = totalRetention / group.cards.length;
-  } else {
-    group.averageRetention = 0;
+  // Calculate from direct cards
+  for (const card of group.cards) {
+    totalRetention += card.retentionRate;
+    totalCards += 1;
   }
 
   // Process subgroups
-  for (const subgroup of group.subgroups.values()) {
+  for (const subgroup of group.subgroups) {
     calculateGroupStatistics(subgroup);
 
-    // Update parent statistics with subgroup data
-    group.totalCards += subgroup.totalCards;
-
+    // Add subgroup's weighted retention
     if (subgroup.totalCards > 0) {
-      const weightedRetention = subgroup.averageRetention * subgroup.totalCards;
-      const currentWeightedRetention = group.averageRetention * group.cards.length;
-      const totalWeight = group.cards.length + subgroup.totalCards;
-
-      if (totalWeight > 0) {
-        group.averageRetention = (currentWeightedRetention + weightedRetention) / totalWeight;
-      } else {
-        // If parent has no direct cards, use subgroup's average
-        group.averageRetention = subgroup.averageRetention;
-      }
+      totalRetention += subgroup.averageRetention * subgroup.totalCards;
+      totalCards += subgroup.totalCards;
     }
+  }
+
+  group.totalCards = totalCards;
+  group.averageRetention = totalCards > 0 ? totalRetention / totalCards : 0;
+}
+
+/**
+ * Recursively sort group hierarchy by name for consistent ordering
+ */
+function sortGroupHierarchy(group: CardGroup): void {
+  // Sort subgroups alphabetically by name
+  group.subgroups.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Recursively sort all subgroups
+  for (const subgroup of group.subgroups) {
+    sortGroupHierarchy(subgroup);
   }
 }

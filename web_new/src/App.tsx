@@ -22,6 +22,16 @@ export function App(): React.JSX.Element {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [showErrorNotification, setShowErrorNotification] = useState<boolean>(false);
 
+  // Auto-hide error notification after 5 seconds
+  React.useEffect(() => {
+    if (showErrorNotification) {
+      const timer = setTimeout(() => {
+        setShowErrorNotification(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showErrorNotification]);
+
   // Build group hierarchy from card data
   const groupHierarchy: CardGroup | null = cards.length > 0 ? buildGroupHierarchy(cards) : null;
 
@@ -33,6 +43,7 @@ export function App(): React.JSX.Element {
   // Build group list for display
   const groupList = groupHierarchy ? buildGroupList(groupHierarchy, expandedGroups) : null;
 
+  // Early returns must come after all hooks
   if (loading) {
     return <div className="loading">Loading card data...</div>;
   }
@@ -87,19 +98,9 @@ export function App(): React.JSX.Element {
     setShowErrorNotification(false);
   };
 
-  // Auto-hide error notification after 5 seconds
-  React.useEffect(() => {
-    if (showErrorNotification) {
-      const timer = setTimeout(() => {
-        setShowErrorNotification(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showErrorNotification]);
-
   return (
     <>
-      <Layout isWideScreen={isWideScreen} onRefresh={handleRefresh} showRefreshButton={!loading}>
+      <Layout isWideScreen={isWideScreen}>
         <TreeMap
           group={groupHierarchy}
           selectedGroupPath={selectedGroupPath}
@@ -113,6 +114,8 @@ export function App(): React.JSX.Element {
           onGroupSelect={handleGroupSelect}
           onGroupToggle={handleGroupToggle}
           onBackToGroupList={handleBackToGroupList}
+          onRefresh={handleRefresh}
+          showRefreshButton={!loading}
         />
       </Layout>
       <PerformanceMonitor

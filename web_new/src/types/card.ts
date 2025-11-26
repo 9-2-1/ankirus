@@ -27,7 +27,7 @@ export interface CardGroup {
   name: string;
   path: string[];
   cards: CardData[];
-  subgroups: Map<string, CardGroup>;
+  subgroups: CardGroup[];
   totalCards: number;
   averageRetention: number;
 }
