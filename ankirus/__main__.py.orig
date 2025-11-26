@@ -1,0 +1,252 @@
+"""应用入口点"""
+
+import asyncio
+import argparse
+import logging
+
+from .app import App
+from .models.config import Config
+from .services.anki_reader import AnkiCachedReader
+
+logging.basicConfig(level=logging.INFO)
+<<<<<<< HEAD
+log = logging.getLogger(__name__)
+Json = Mapping[str, "Json"] | Sequence["Json"] | str | int | float | bool | None
+
+
+class ReplyGroup(TypedDict):
+    group: list[str]
+
+
+class ReplyCard(TypedDict):
+    time: int
+    difficulty: float
+    stability: float
+    decay: float
+    front: str
+    back: str
+    paused: NotRequired[Literal[True]]
+
+
+def strip_dight(obj: Json) -> Json:
+    if isinstance(obj, dict):
+        return {key: strip_dight(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [strip_dight(item) for item in obj]
+    elif isinstance(obj, float):
+        obj = round(obj, 3)
+        if obj % 1.0 == 0.0:
+            obj = int(obj)
+        return obj
+    else:
+        return obj
+
+
+class App:
+    def __init__(self, config: Config) -> None:
+        self.config = config
+        self.ankireader = AnkiCachedReader(
+            self.config.get("userprofile") + "collection.anki2", self.config
+        )
+
+        # 根据配置决定是否启用敏感词过滤
+        self.enable_sensitive_word_filter = self.config.get(
+            "enable_sensitive_word_filter", True
+        )
+        self.banned_words = []
+        if self.enable_sensitive_word_filter:
+            with open(self.config.get("banned_words"), "r", encoding="utf-8") as f:
+                self.banned_words = f.read().splitlines()
+                self.banned_words = [
+                    word.strip() for word in self.banned_words if word.strip() != ""
+                ]
+                self.banned_words.sort(key=len, reverse=True)
+
+        # 根据配置决定是否启用缓存
+        self.enable_cache = self.config.get("enable_cache", True)
+        self.cachedb = None
+        if self.enable_cache:
+            self.cachedb = sqlite3.connect(self.config.get("cachedb"))
+            self.cachedb.execute("PRAGMA journal_mode = WAL;")
+            self.cachedb.execute("PRAGMA locking_mode = EXCLUSIVE;")
+            self.cachedb.execute(
+                "CREATE TABLE IF NOT EXISTS sanitize (input TEXT PRIMARY KEY, output TEXT) WITHOUT ROWID"
+            )
+            self.cachedb.commit()
+
+    async def sanitize_cached(self, text: str) -> str:
+        input_text = text
+
+        # 检查缓存
+        if self.enable_cache and self.cachedb:
+            cacherow = self.cachedb.execute(
+                "SELECT output FROM sanitize WHERE input = ?", (input_text,)
+            ).fetchone()
+            if cacherow:
+                text = cast(str, cacherow[0])
+                if text == "":
+                    text = input_text
+                return text
+
+        # 基础净化
+
+        # 敏感词过滤
+        if self.enable_sensitive_word_filter:
+            while True:
+                old_text = text
+                for word in self.banned_words:
+                    text = text.replace(word, "")
+                if old_text == text:
+                    break
+
+        # 保存到缓存
+        if self.enable_cache and self.cachedb:
+            self.cachedb.execute(
+                "INSERT INTO sanitize (input, output) VALUES (?, ?)",
+                (input_text, "" if input_text == text else text),
+            )
+            self.cachedb.commit()
+
+        return text
+
+    async def handle_count_due_cards(self, request: web.Request) -> web.Response:
+        now = int(time.time())
+        due_count = len(
+            [card for card in await self.ankireader.read() if card.due <= now]
+        )
+        return web.Response(text=str(due_count))
+
+    async def handle_cards(self, request: web.Request) -> web.Response:
+        cards = await self.ankireader.read(sanitize=self.sanitize_cached)
+        cache_timestamp = self.ankireader.cache_mtime
+        last_modified = time.strftime(
+            "%a, %d %b %Y %H:%M:%S GMT", time.gmtime(int(cache_timestamp))
+        )
+        if_modified_since = request.headers.get("If-Modified-Since", "?")
+        try:
+            req_timestamp = calendar.timegm(
+                time.strptime(if_modified_since, "%a, %d %b %Y %H:%M:%S GMT")
+            )
+        except ValueError:
+            req_timestamp = int(cache_timestamp) - 1
+        headers = {
+            "Last-Modified": last_modified,
+            "Cache-Control": "no-cache",
+            "Content-Type": "application/json",
+        }
+        if int(cache_timestamp) == int(req_timestamp):
+            return web.Response(status=304, headers=headers)
+
+        response_arr: list[Union[ReplyGroup, ReplyCard]] = []
+        last_group = ""
+        for card in cards:
+            if card.group != last_group:
+                response_arr.append({"group": card.group.split("::")})
+                last_group = card.group
+            card_dict: ReplyCard = {
+                "time": card.time,
+                "difficulty": card.difficulty,
+                "stability": card.stability,
+                "decay": card.decay,
+                "front": card.front,
+                "back": card.back,
+            }
+            if card.paused:
+                card_dict["paused"] = True
+            response_arr.append(card_dict)
+        responseBody = json.dumps(
+            strip_dight(cast(Json, response_arr)),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        response = web.Response(body=responseBody, headers=headers)
+        response.enable_compression(strategy=9)
+        return response
+
+    async def handle_index(self, request: web.Request) -> web.Response:
+        # 根据配置决定是否启用统计
+        enable_statistics = self.config.get("enable_statistics", True)
+
+        with open("web/dist/index.html", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # 如果禁用统计，移除统计脚本
+        if not enable_statistics:
+            content = content.replace('<script src="/ms-clarity.js"></script>', "")
+
+        return web.Response(text=content, content_type="text/html")
+
+    async def handle_old_index(self, request: web.Request) -> web.FileResponse:
+        # 根据配置决定是否启用统计
+        enable_statistics = self.config.get("enable_statistics", True)
+
+        with open("web_old/index.html", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # 如果禁用统计，移除统计脚本
+        if not enable_statistics:
+            content = content.replace('<script src="/ms-clarity.js"></script>', "")
+
+        return web.Response(text=content, content_type="text/html")
+
+    async def run(self) -> None:
+        app = web.Application()
+        app.router.add_get("/", self.handle_index)
+        app.router.add_get("/web_old/", self.handle_old_index)
+        app.router.add_get("/cards/", self.handle_cards)
+        app.router.add_get("/cards/due/", self.handle_count_due_cards)
+        app.router.add_static("/assets/", "web_new/dist/assets")
+        app.router.add_static("/web_old/", "web_old")
+        app.router.add_static(
+            "/", self.config.get("userprofile") + self.config.get("media")
+        )
+
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", self.config.get("port"))
+        await site.start()
+
+        log.info(f"ankirus started at http://127.0.0.1:{self.config.get('port')}")
+        try:
+            while True:
+                await asyncio.sleep(3600)
+        except KeyboardInterrupt:
+            log.info("ankirus stopped")
+
+        if self.cachedb:
+            self.cachedb.close()
+=======
+>>>>>>> rewrite
+
+
+async def main() -> None:
+    """主函数"""
+    parser = argparse.ArgumentParser(description="ankirus")
+    parser.add_argument("--test", action="store_true")
+    parser.add_argument("--config", type=str, default="config.json", help="config file")
+    args = parser.parse_args()
+    config = Config(args.config)
+
+    if args.test:
+        await _run_test_mode(config)
+    else:
+        await _run_app_mode(config)
+
+
+async def _run_test_mode(config: Config) -> None:
+    """测试模式运行"""
+    ankireader = AnkiCachedReader(
+        config.get("userprofile") + "collection.anki2", config
+    )
+    cards = await ankireader.read()
+    ankireader.close()
+
+
+async def _run_app_mode(config: Config) -> None:
+    """应用模式运行"""
+    app = App(config)
+    await app.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
