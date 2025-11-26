@@ -1,8 +1,7 @@
 import asyncio
 import logging
 import json
-from typing import cast, Sequence, Mapping, Any, TypedDict, Literal, NotRequired, Union
-from dataclasses import asdict
+from typing import cast, Sequence, Mapping, TypedDict, Literal, NotRequired, Union
 import time
 import sqlite3
 import calendar
@@ -12,7 +11,6 @@ from aiohttp import web
 
 from .ankicached import AnkiCachedReader
 from .config import Config
-from .nodejs import NodeJSAgent
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -53,7 +51,6 @@ class App:
         self.ankireader = AnkiCachedReader(
             self.config.get("userprofile") + "collection.anki2", self.config
         )
-        self.nodejs_agent = NodeJSAgent()
         self.banned_words = []
         with open(self.config.get("banned_words"), "r", encoding="utf-8") as f:
             self.banned_words = f.read().splitlines()
@@ -79,7 +76,6 @@ class App:
             if text == "":
                 text = input_text
             return text
-        text = await self.nodejs_agent.purify(text)
         while True:
             old_text = text
             for word in self.banned_words:
@@ -151,8 +147,6 @@ class App:
         return web.FileResponse("web/index.html")
 
     async def run(self) -> None:
-        await self.nodejs_agent.agent_run()
-
         app = web.Application()
         app.router.add_get("/", self.handle_index)
         app.router.add_get("/cards/", self.handle_cards)
@@ -174,7 +168,6 @@ class App:
         except KeyboardInterrupt:
             log.info("ankirus stopped")
 
-        await self.nodejs_agent.agent_close()
         self.cachedb.close()
 
 
