@@ -150,6 +150,41 @@ class AnkirusApp {
     return div;
   }
 
+  _sanitizeHtml(content: string): string {
+    if (typeof DOMPurify !== "undefined" && DOMPurify.sanitize) {
+      // Configure DOMPurify with MathJax-friendly settings
+      const config = {
+        ADD_TAGS: [
+          "math",
+          "mrow",
+          "mi",
+          "mo",
+          "mn",
+          "msup",
+          "msub",
+          "mfrac",
+          "msqrt",
+          "mroot",
+        ],
+        ADD_ATTR: ["display", "mathvariant", "mathsize", "mathcolor", "href"],
+        FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "base"],
+        FORBID_ATTR: [
+          "onclick",
+          "onload",
+          "onerror",
+          "onmouseover",
+          "onmouseout",
+        ],
+      };
+      return DOMPurify.sanitize(content, config);
+    }
+    // Fallback: basic sanitization if DOMPurify is not available
+    return content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+      .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "");
+  }
+
   _groupElement(
     indent: string,
     name: string,
@@ -307,8 +342,12 @@ class AnkirusApp {
       .toString();
     const to_typeset = ["#question", "#answer"];
     MathJax.typesetClear(to_typeset);
-    document.getElementById("question")!.innerHTML = card.front;
-    document.getElementById("answer")!.innerHTML = card.back;
+    document.getElementById("question")!.innerHTML = this._sanitizeHtml(
+      card.front,
+    );
+    document.getElementById("answer")!.innerHTML = this._sanitizeHtml(
+      card.back,
+    );
     document.getElementById("answer")!.style.display = "none";
     document.getElementById("show-answer")!.style.display = "block";
     MathJax.typeset(to_typeset);
