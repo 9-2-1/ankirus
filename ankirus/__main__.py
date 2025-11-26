@@ -1,8 +1,7 @@
 import asyncio
 import logging
 import json
-from typing import cast, Sequence, Mapping, Any, TypedDict, Literal, NotRequired, Union
-from dataclasses import asdict
+from typing import cast, Sequence, Mapping, TypedDict, Literal, NotRequired, Union
 import time
 import sqlite3
 import calendar
@@ -12,7 +11,6 @@ from aiohttp import web
 
 from .ankicached import AnkiCachedReader
 from .config import Config
-from .nodejs import NodeJSAgent
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -53,7 +51,6 @@ class App:
         self.ankireader = AnkiCachedReader(
             self.config.get("userprofile") + "collection.anki2", self.config
         )
-        self.nodejs_agent = NodeJSAgent()
 
         # 根据配置决定是否启用敏感词过滤
         self.enable_sensitive_word_filter = self.config.get(
@@ -95,7 +92,6 @@ class App:
                 return text
 
         # 基础净化
-        text = await self.nodejs_agent.purify(text)
 
         # 敏感词过滤
         if self.enable_sensitive_word_filter:
@@ -174,7 +170,20 @@ class App:
         # 根据配置决定是否启用统计
         enable_statistics = self.config.get("enable_statistics", True)
 
-        with open("web/index.html", "r", encoding="utf-8") as f:
+        with open("web/dist/index.html", "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # 如果禁用统计，移除统计脚本
+        if not enable_statistics:
+            content = content.replace('<script src="/ms-clarity.js"></script>', "")
+
+        return web.Response(text=content, content_type="text/html")
+
+    async def handle_old_index(self, request: web.Request) -> web.FileResponse:
+        # 根据配置决定是否启用统计
+        enable_statistics = self.config.get("enable_statistics", True)
+
+        with open("web_old/index.html", "r", encoding="utf-8") as f:
             content = f.read()
 
         # 如果禁用统计，移除统计脚本
@@ -184,13 +193,13 @@ class App:
         return web.Response(text=content, content_type="text/html")
 
     async def run(self) -> None:
-        await self.nodejs_agent.agent_run()
-
         app = web.Application()
         app.router.add_get("/", self.handle_index)
+        app.router.add_get("/web_old/", self.handle_old_index)
         app.router.add_get("/cards/", self.handle_cards)
         app.router.add_get("/cards/due/", self.handle_count_due_cards)
-        app.router.add_static("/static/", "web")
+        app.router.add_static("/assets/", "web_new/dist/assets")
+        app.router.add_static("/web_old/", "web_old")
         app.router.add_static(
             "/", self.config.get("userprofile") + self.config.get("media")
         )
@@ -207,7 +216,6 @@ class App:
         except KeyboardInterrupt:
             log.info("ankirus stopped")
 
-        await self.nodejs_agent.agent_close()
         if self.cachedb:
             self.cachedb.close()
 

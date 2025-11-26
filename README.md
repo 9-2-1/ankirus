@@ -16,10 +16,14 @@ ankirus/
 ├── ankirus_nodejs/      # Node.js 后端相关代码
 │   └── ...
 ├── web/                 # HTML, CSS 以及编译后的前端 JavaScript 代码
-├── web_ts/              # TypeScript 前端代码
+├── web_ts/              # TypeScript 前端代码 (原版)
 │   ├── ankirus.ts       # 主应用类
 │   ├── statemap.ts      # 状态地图组件
 │   ├── options.ts       # 选项设置
+│   └── ...
+├── web_new/             # 新版 React + D3.js 前端 (实验性)
+│   ├── src/             # TypeScript 源码
+│   ├── package.json     # Node.js 依赖
 │   └── ...
 ├── config.json          # 配置文件
 ├── config-test.json     # 测试配置
@@ -85,8 +89,7 @@ tsc
 python -m ankirus
 ```
 
-2. 在浏览器中访问
-   打开 http://127.0.0.1:24032
+2. 在浏览器中访问打开 http://127.0.0.1:24032
 
 ## 功能特点
 
@@ -99,11 +102,24 @@ python -m ankirus
 
 ### 前端开发
 
+#### 原版前端 (web_ts/)
+
 前端代码位于 `web_ts/` 目录，使用 TypeScript 编写。修改代码后需要重新编译：
 
 ```bash
 cd web_ts
 tsc
+```
+
+#### 新版前端 (web_new/)
+
+实验性的新版前端使用 React + D3.js，提供 TreeMap 可视化：
+
+```bash
+cd web_new
+npm install
+npm run dev  # 开发模式
+npm run build  # 生产构建
 ```
 
 ### 后端开发
