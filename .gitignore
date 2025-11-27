@@ -10,4 +10,4 @@ node_modules
 /tmp-*
 /web_old/*.js
 /banned_words.txt
-/web_new/dist/
+dist/

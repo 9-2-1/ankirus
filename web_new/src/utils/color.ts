@@ -1,8 +1,6 @@
 // Color utilities for retention rate visualization
-import { interpolateColor, getBorderColor, RGBColor } from './colorConfig';
-
-export { interpolateColor } from './colorConfig';
-export type { RGBColor } from './colorConfig';
+import type { RGBColor } from './colorConfig';
+import { retentionColors } from './colorConfig';
 
 /**
  * Convert RGBColor to CSS string
@@ -37,4 +35,62 @@ export function getContrastTextColor(backgroundColor: RGBColor): string {
   const luminance =
     (0.299 * backgroundColor.r + 0.587 * backgroundColor.g + 0.114 * backgroundColor.b) / 255;
   return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
+/**
+ * Interpolate color based on retention rate
+ */
+export function interpolateColor(retention: number): RGBColor {
+  // Find the two closest color points
+  let lowerIndex = 0;
+  let upperIndex = retentionColors.length - 1;
+
+  for (let i = 0; i < retentionColors.length - 1; i++) {
+    const currentPoint = retentionColors[i]![0];
+    const nextPoint = retentionColors[i + 1]![0];
+    if (retention >= currentPoint && retention <= nextPoint) {
+      lowerIndex = i;
+      upperIndex = i + 1;
+      break;
+    }
+  }
+
+  const lower = retentionColors[lowerIndex]!;
+  const upper = retentionColors[upperIndex]!;
+
+  const [lowerPoint, lowerColor] = lower;
+  const [upperPoint, upperColor] = upper;
+
+  // Calculate interpolation factor
+  const factor = (retention - lowerPoint) / (upperPoint - lowerPoint);
+
+  // Interpolate RGB values
+  const r = Math.round(lowerColor[0] + (upperColor[0] - lowerColor[0]) * factor);
+  const g = Math.round(lowerColor[1] + (upperColor[1] - lowerColor[1]) * factor);
+  const b = Math.round(lowerColor[2] + (upperColor[2] - lowerColor[2]) * factor);
+
+  return { r, g, b };
+}
+
+/**
+ * Get border color (mixed with black)
+ */
+export function getBorderColor(retention: number): RGBColor {
+  const color = interpolateColor(retention);
+  // Mix with black: color / 2
+  return { r: Math.round(color.r / 2), g: Math.round(color.g / 2), b: Math.round(color.b / 2) };
+}
+
+/**
+ * Convert RGB color to CSS string
+ */
+export function rgbToCss(color: RGBColor): string {
+  return `rgb(${color.r}, ${color.g}, ${color.b})`;
+}
+
+/**
+ * Get text color by mixing background color with 50% black
+ */
+export function getTextColor(retention: number): RGBColor {
+  return getBorderColor(retention);
 }

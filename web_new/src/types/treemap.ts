@@ -1,5 +1,5 @@
 // TreeMap related types
-import { CardData } from './card';
+import type { CardData } from './card';
 
 export interface TreeMapNode {
   name: string;

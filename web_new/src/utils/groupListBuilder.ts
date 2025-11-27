@@ -1,4 +1,4 @@
-import { CardGroup, GroupListItem } from '../types/card';
+import type { CardGroup, GroupListItem } from '../types/card';
 
 /**
  * Convert CardGroup hierarchy to GroupListItem hierarchy with expand/collapse state
@@ -27,19 +27,6 @@ export function buildGroupList(
   }
 
   return listItem;
-}
-
-/**
- * Get a flattened list of all groups for filtering
- */
-export function getAllGroups(group: CardGroup): CardGroup[] {
-  const groups: CardGroup[] = [group];
-
-  for (const subgroup of group.subgroups) {
-    groups.push(...getAllGroups(subgroup));
-  }
-
-  return groups;
 }
 
 /**

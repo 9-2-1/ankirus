@@ -30,6 +30,7 @@ export interface CardGroup {
   subgroups: CardGroup[];
   totalCards: number;
   averageRetention: number;
+  uniqueId: string;
 }
 
 // Group list item for the hierarchical group display

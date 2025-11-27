@@ -1,4 +1,4 @@
-import { ApiResponseItem, CardData, CardGroup, ReplyCard } from '../types/card';
+import type { ApiResponseItem, CardData, CardGroup, ReplyCard } from '../types/card';
 
 /**
  * Calculate retention rate based on FSRS decay value
@@ -58,6 +58,7 @@ export function buildGroupHierarchy(cards: CardData[]): CardGroup {
     subgroups: [],
     totalCards: 0,
     averageRetention: 0,
+    uniqueId: '::',
   };
 
   for (const card of cards) {
@@ -79,6 +80,7 @@ export function buildGroupHierarchy(cards: CardData[]): CardGroup {
             subgroups: [],
             totalCards: 0,
             averageRetention: 0,
+            uniqueId: [...groupPath, groupName].join('::'),
           };
           currentGroup.subgroups.push(subgroup);
         }
