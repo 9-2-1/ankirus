@@ -28,6 +28,16 @@
       mathJaxStore.renderMathJax(containerRef);
     }
   });
+
+  // 当内容更新时也重新渲染MathJax
+  $effect(() => {
+    if (containerRef && mathJaxReady && sanitizedContent) {
+      // 等待DOM更新后再渲染MathJax
+      queueMicrotask(() => {
+        mathJaxStore.renderMathJax(containerRef);
+      });
+    }
+  });
 </script>
 
 <div class="card-content" bind:this={containerRef}>

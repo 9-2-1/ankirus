@@ -16,6 +16,9 @@ function createMathJaxStore() {
   const renderMathJax = (element: HTMLElement): void => {
     const mathJaxWindow = window as unknown as MathJaxWindow;
     if (mathJaxReady && mathJaxWindow.MathJax) {
+      // 清空元素内容以确保正确渲染
+      element.querySelectorAll('mjx-container').forEach(container => container.remove());
+
       mathJaxWindow.MathJax.typesetPromise([element]).catch((error: unknown) => {
         console.error('MathJax rendering error:', error);
       });
