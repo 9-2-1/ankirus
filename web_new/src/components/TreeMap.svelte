@@ -3,12 +3,7 @@
   import type { CardGroup } from '../types/card';
   import type { TreeMapRect } from '../types/treemap';
   import { calculateTreeMap } from '../stores/treeMap';
-  import {
-    getRetentionColor,
-    getRetentionBorderColor,
-    getContrastTextColor,
-    interpolateColor,
-  } from '../utils/color';
+  import { getRetentionColor, getRetentionBorderColor } from '../utils/color';
   import { retentionColors } from '../utils/colorConfig';
   import { findGroupByPath } from '../utils/groupListBuilder';
   import { debounce } from '../utils/performance';
@@ -67,36 +62,6 @@
     displayRoot && calculateTreeMap(displayRoot, dimensions.width, dimensions.height)
   );
 
-  // Apply additional optimizations for high card counts
-  const isHighCardCount = $derived(group.totalCards > PERFORMANCE_CONFIG.HIGH_CARD_COUNT_THRESHOLD);
-
-  // Helper function to determine if a node should show text
-  function shouldShowText(node: TreeMapRect): boolean {
-    const width = node.x1 - node.x0;
-    const height = node.y1 - node.y0;
-
-    // Apply stricter thresholds for high card counts
-    const minTextWidth = isHighCardCount
-      ? PERFORMANCE_CONFIG.MIN_TEXT_WIDTH * 1.5
-      : PERFORMANCE_CONFIG.MIN_TEXT_WIDTH;
-    const minTextHeight = isHighCardCount
-      ? PERFORMANCE_CONFIG.MIN_TEXT_HEIGHT * 1.5
-      : PERFORMANCE_CONFIG.MIN_TEXT_HEIGHT;
-
-    return width > minTextWidth && height > minTextHeight;
-  }
-
-  // Helper function to get text for a node
-  function getNodeText(node: TreeMapRect): string {
-    // For individual cards, show retention percentage
-    if (node.data.cardData) {
-      return `${Math.round(node.data.averageRetention * 100)}%`;
-    }
-    // For groups, show group name
-    const name = node.data.path[node.data.path.length - 1] || 'Root';
-    return name.length > 8 ? name.substring(0, 6) + '...' : name;
-  }
-
   // Helper function to get node styles
   function getNodeStyles(node: TreeMapRect): {
     fill: string;
@@ -116,11 +81,6 @@
       classList: ['treemap-rect', { selected: isSelected, paused: isPaused }],
     };
   }
-
-  // Helper function to get text color
-  function getTextNodeColor(node: TreeMapRect): string {
-    return getContrastTextColor(interpolateColor(node.data.averageRetention));
-  }
 </script>
 
 <div class="treemap-container">
@@ -131,10 +91,8 @@
         <!-- Render card nodes -->
         {#each treeMapLayout.nodes as node (node.data.cardData?.uniqueId || node.data.path.join('::'))}
           {@const styles = getNodeStyles(node)}
-          {@const text = getNodeText(node)}
-          {@const textColor = getTextNodeColor(node)}
           <rect
-            class={['treemap-node', ...styles.classList]}
+            class={styles.classList}
             style:cursor={node.data.cardData ? 'pointer' : 'default'}
             onclick={() => node.data.cardData && onCardSelect(node.data.cardData.uniqueId)}
             role="button"
@@ -152,26 +110,20 @@
             fill={styles.fill}
             stroke={styles.stroke}
             stroke-width={styles.strokeWidth}
-          >
-            {#if shouldShowText(node)}
-              <text x="2" y="10" fill={textColor} font-size="8px">
-                {text}
-              </text>
-            {/if}
-          </rect>
+          />
         {/each}
 
         <!-- Render group borders AFTER cards (so they appear on top) -->
         {#each treeMapLayout.groupNodes as groupNode (groupNode.data.path.join('-'))}
-          <g transform={`translate(${groupNode.x0},${groupNode.y0})`} class="treemap-group">
-            <rect
-              width={groupNode.x1 - groupNode.x0}
-              height={groupNode.y1 - groupNode.y0}
-              fill="none"
-              stroke="black"
-              stroke-width="3"
-            />
-          </g>
+          <rect
+            x={groupNode.x0}
+            y={groupNode.y0}
+            width={groupNode.x1 - groupNode.x0}
+            height={groupNode.y1 - groupNode.y0}
+            fill="none"
+            stroke="black"
+            stroke-width="3"
+          />
         {/each}
       {/if}
     </svg>
