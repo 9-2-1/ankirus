@@ -7,7 +7,7 @@
   }: { isWideScreen: boolean; treemap: Snippet; preview: Snippet } = $props();
 </script>
 
-<div class="layout {isWideScreen ? 'layout-wide' : 'layout-narrow'}">
+<div class={['layout', isWideScreen ? 'layout-wide' : 'layout-narrow']}>
   <div class="treemap-section">
     {@render treemap()}
   </div>
