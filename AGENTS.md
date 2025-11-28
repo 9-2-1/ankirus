@@ -15,14 +15,14 @@
       updateXXXElement(XXXelem); // XXXelem.update()
     }
     ```
-  - 在与 React 或者 D3.js 最佳实践冲突时除外（优先遵守最佳实践，假如库的部分功能不鼓励使用类或者函数，则不使用）
 
 - 编写完善的 typescript 注解以尽快排除错误
   - 函数参数必须注解 `function pick_item(index: number) {`
   - 如果函数内部较长或者包含其他复杂函数，请注解返回值
-  - 鼓励定义容易阅读的 typeAlias 和 interface。 `type ExampleChanges = {name: string, mode: "add" | "remove", delta: number}`
+  - 鼓励定义容易阅读的 type 和 interface。 `type ExampleChanges = {name: string, mode: "add" | "remove", delta: number}`
+  - 使用 npm run lint 检查错误
 
-- 处理 tsc 报告的错误
+- 处理 `npm run lint` 报告的错误
   - 类型错误的成因有多种可能：提供的数据错误，调用的函数（设置的变量，参数）错误，以及类型标注本身错误。需要同时考虑这三种可能。
   - 只有在确保不会出现错误的时候才使用 as Type 和 !。鼓励使用 as Type 或者 as Interface 替代 any。
     ```
