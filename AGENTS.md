@@ -1,25 +1,17 @@
 - 鼓励定义容易理解/调试的函数和类/子组件，使代码易于人类阅读。
-  - 通用，大量重复的操作 `const x = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);` -> `const [x, _] = quadEqSolve(a, b, c);` `let fullpath = file.drive + file.path + file.name;` -> `let fullpath = fileFullpath(file); // file.fullpath() 甚至 file.fullpath (getter)`
-  - 复杂的操作
-    ```
-    document.createElement...
-    fetch(...).then(...)...
-    ...
-    xxx.innerxxxx=...
-    ```
-    ->
-    ```
-    async function updateXXX(){
-      let XXXelem = createXXXElement();
-      await getXXXData();
-      updateXXXElement(XXXelem); // XXXelem.update()
-    }
-    ```
+  - 通用，大量重复的操作  
+    `const x = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);`  
+    -> `const [x, _] = quadEqSolve(a, b, c);`  
+    `let fullpath = file.drive + file.path + file.name;`  
+    -> `let fullpath = fileFullpath(file); // file.fullpath() 甚至 file.fullpath (getter)`
+  - 复杂的操作，如具有大量操作不适合阅读的函数，拆分成几个良好命名的函数。
+  - 在与 Svelte 或者 D3.js 最佳实践冲突时除外（优先遵守最佳实践，假如库的部分功能不鼓励使用类或者函数，则不使用）
 
 - 编写完善的 typescript 注解以尽快排除错误
   - 函数参数必须注解 `function pick_item(index: number) {`
   - 如果函数内部较长或者包含其他复杂函数，请注解返回值
-  - 鼓励定义容易阅读的 type 和 interface。 `type ExampleChanges = {name: string, mode: "add" | "remove", delta: number}`
+  - 鼓励定义容易阅读的 type 和 interface。  
+    `type ExampleChanges = {name: string, mode: "add" | "remove", delta: number}`
   - 使用 npm run lint 检查错误
 
 - 处理 `npm run lint` 报告的错误
@@ -32,4 +24,5 @@
     ```
   - 如果外部库缺少类型注解，则
     - 尝试安装注解库
-    - 没有注解库，则根据外部库内容创建 .d.ts 文件，包含用到的函数的注解。例如 footest 库没有注解，而根据文档/源代码判断用到的函数 footest.create 的参数类型为 (string, TestConfig)，则将其添加到 .d.ts 文件中。
+    - 没有注解库，则根据外部库内容创建 .d.ts 文件，包含用到的函数的注解。  
+      例如 footest 库没有注解，而根据文档/源代码判断用到的函数 footest.create 的参数类型为 (string, TestConfig)，则将其添加到 .d.ts 文件中。
