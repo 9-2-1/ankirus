@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { CardGroup } from '../types/card';
   import type { TreeMapRect } from '../types/treemap';
   import { calculateTreeMap } from '../stores/treeMap';
   import { getRetentionColor, getRetentionBorderColor } from '../utils/color';
   import { retentionColors } from '../utils/colorConfig';
   import { findGroupByPath } from '../utils/groupListBuilder';
-  import { debounce } from '../utils/performance';
   import { PERFORMANCE_CONFIG } from '../utils/performanceConfig';
 
   type Props = {
@@ -18,48 +16,35 @@
 
   let { group, onCardSelect, selectedGroupPath, selectedCardId }: Props = $props();
 
-  let svgContainerRef: HTMLDivElement;
-  let dimensions = $state({ width: 0, height: 0 });
+  let containerWidth = $state(0);
+  let containerHeight = $state(0);
+  let debouncedWidth = $state(0);
+  let debouncedHeight = $state(0);
+  let debounceTimer = $state<number | null>(null);
 
-  // Calculate dimensions based on SVG container only
-  let resizeObserver: ResizeObserver | null = null;
-
-  onMount(() => {
-    // TODO
-    const updateDimensions = (): void => {
-      if (svgContainerRef) {
-        const { width, height } = svgContainerRef.getBoundingClientRect();
-        // Only update if dimensions actually changed
-        if (width !== dimensions.width || height !== dimensions.height) {
-          dimensions = { width, height };
-        }
-      }
-    };
-
-    // Use debounced resize handler
-    const debouncedResize = debounce(updateDimensions, PERFORMANCE_CONFIG.RESIZE_DEBOUNCE_MS);
-
-    updateDimensions();
-    window.addEventListener('resize', debouncedResize);
-
-    // Use ResizeObserver for more efficient dimension tracking
-    if ('ResizeObserver' in window) {
-      resizeObserver = new ResizeObserver(debouncedResize);
-      resizeObserver.observe(svgContainerRef);
-    }
-
+  // Debounced dimension updates
+  $effect(() => {
+    // Set new timer
+    const aWidth = containerWidth;
+    const aHeight = containerHeight;
+    debounceTimer = window.setTimeout(() => {
+      debouncedWidth = aWidth;
+      debouncedHeight = aHeight;
+      debounceTimer = null;
+    }, PERFORMANCE_CONFIG.RESIZE_DEBOUNCE_MS);
+    // Cancel previous timer if exists
     return () => {
-      window.removeEventListener('resize', debouncedResize);
-      if (resizeObserver) {
-        resizeObserver.disconnect();
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
       }
     };
   });
 
   const displayRoot = $derived(findGroupByPath(group, selectedGroupPath));
-  // Calculate TreeMap layout
+  // Calculate TreeMap layout with debounced dimensions
   const treeMapLayout = $derived(
-    displayRoot && calculateTreeMap(displayRoot, dimensions.width, dimensions.height)
+    displayRoot && calculateTreeMap(displayRoot, debouncedWidth, debouncedHeight)
   );
 
   // Helper function to get node styles
@@ -85,8 +70,12 @@
 
 <div class="treemap-container">
   <h3>Card Retention TreeMap</h3>
-  <div class="treemap-svg-container" bind:this={svgContainerRef}>
-    <svg width={dimensions.width} height={dimensions.height} class="treemap-svg">
+  <div
+    class="treemap-svg-container"
+    bind:clientWidth={containerWidth}
+    bind:clientHeight={containerHeight}
+  >
+    <svg width={containerWidth} height={containerHeight} class="treemap-svg">
       {#if treeMapLayout}
         <!-- Render card nodes -->
         {#each treeMapLayout.nodes as node (node.data.cardData?.uniqueId || node.data.path.join('::'))}
