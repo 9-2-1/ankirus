@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CardGroup } from '../types/card';
   import type { TreeMapRect } from '../types/treemap';
-  import { calculateTreeMap } from '../stores/treeMap';
+  import { calculateTreeMap } from '../utils/treeMap';
   import { getRetentionColor, getRetentionBorderColor } from '../utils/color';
   import { retentionColors } from '../utils/colorConfig';
   import { findGroupByPath } from '../utils/groupListBuilder';

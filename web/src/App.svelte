@@ -15,34 +15,38 @@
   let showErrorNotification = $state(false);
 
   // Custom hooks converted to stores
-  import type { CardData } from './types/card';
-  import { cardDataStore } from './stores/cardData';
-  import { responsiveStore } from './stores/responsive';
+  import type { ApiResponseItem, CardData } from './types/card';
+  import { parseApiResponse } from './utils/groupParser';
 
   let cards: CardData[] = $state([]);
-  let loading = $state(true);
-  let error = $state<string | null>(null);
-  let isWideScreen = $state(false);
+  let loading: boolean = $state(true);
+  let error: string | null = $state(null);
 
-  // Subscribe to stores
-  $effect(() => {
-    const unsubscribe = cardDataStore.subscribe(state => {
-      cards = state.cards;
-      loading = state.loading;
-      error = state.error;
-    });
+  // 定义操作状态的方法
+  async function fetchCardData(): Promise<void> {
+    try {
+      loading = true;
+      error = null;
 
-    const unsubscribeResponsive = responsiveStore.subscribe(state => {
-      isWideScreen = state.isWideScreen;
-    });
+      const response = await fetch('cards/');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch cards: ${response.status}`);
+      }
 
-    return () => {
-      unsubscribe();
-      unsubscribeResponsive();
-    };
-  });
+      const data: ApiResponseItem[] = await response.json();
+      const parsedCards = parseApiResponse(data);
+      cards = parsedCards;
+      loading = false;
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Unknown error occurred';
+      loading = false;
+    }
+  }
 
-  const refetch = () => cardDataStore.refetch();
+  // 根据屏幕宽度判断布局
+
+  let clientWidth: number = $state(0);
+  let isWideScreen: boolean = $derived(clientWidth >= 1024);
 
   // Auto-hide error notification after 5 seconds
   $effect(() => {
@@ -93,7 +97,7 @@
 
   async function handleRefresh(): Promise<void> {
     try {
-      await refetch();
+      await fetchCardData();
       // If refresh succeeds, hide any existing error notification
       showErrorNotification = false;
     } catch {
@@ -105,61 +109,67 @@
   function handleCloseErrorNotification(): void {
     showErrorNotification = false;
   }
+
+  $effect(() => {
+    fetchCardData();
+  });
 </script>
 
-<!-- Loading state -->
-{#if loading}
-  <div class="loading">Loading card data...</div>
+<div bind:clientWidth>
+  <!-- Loading state -->
+  {#if loading}
+    <div class="loading">Loading card data...</div>
 
-  <!-- Error state -->
-{:else if error}
-  <div class="error">Error: {error}</div>
+    <!-- Error state -->
+  {:else if error}
+    <div class="error">Error: {error}</div>
 
-  <!-- No data state -->
-{:else if !groupHierarchy || !groupList}
-  <div class="no-data">No card data available</div>
+    <!-- No data state -->
+  {:else if !groupHierarchy || !groupList}
+    <div class="no-data">No card data available</div>
 
-  <!-- Main content -->
-{:else}
-  <Layout {isWideScreen}>
-    {#snippet treemap()}
-      <TreeMap
-        group={groupHierarchy}
-        onCardSelect={handleCardSelect}
-        {selectedGroupPath}
-        {selectedCardId}
-      />
-    {/snippet}
-    {#snippet preview()}
-      <CardPreview
-        card={selectedCard}
-        {groupList}
-        {selectedGroupPath}
-        onGroupSelect={handleGroupSelect}
-        onGroupToggle={handleGroupToggle}
-        onBackToGroupList={handleBackToGroupList}
-        onRefresh={handleRefresh}
-        showRefreshButton={!loading}
-      />
-    {/snippet}
-  </Layout>
-  <PerformanceMonitor
-    cardCount={cards.length}
-    isVisible={PERFORMANCE_CONFIG.ENABLE_PERFORMANCE_MONITOR}
-  />
+    <!-- Main content -->
+  {:else}
+    <Layout {isWideScreen}>
+      {#snippet treemap()}
+        <TreeMap
+          group={groupHierarchy}
+          onCardSelect={handleCardSelect}
+          {selectedGroupPath}
+          {selectedCardId}
+        />
+      {/snippet}
+      {#snippet preview()}
+        <CardPreview
+          card={selectedCard}
+          {groupList}
+          {selectedGroupPath}
+          onGroupSelect={handleGroupSelect}
+          onGroupToggle={handleGroupToggle}
+          onBackToGroupList={handleBackToGroupList}
+          onRefresh={handleRefresh}
+          showRefreshButton={!loading}
+        />
+      {/snippet}
+    </Layout>
+    <PerformanceMonitor
+      cardCount={cards.length}
+      isVisible={PERFORMANCE_CONFIG.ENABLE_PERFORMANCE_MONITOR}
+    />
 
-  <!-- Error notification -->
-  {#if showErrorNotification}
-    <div class="error-notification">
-      <div class="error-content">
-        <span class="error-message">Failed to refresh data: {error}</span>
-        <button class="error-close" onclick={handleCloseErrorNotification} title="Close">
-          ✕
-        </button>
+    <!-- Error notification -->
+    {#if showErrorNotification}
+      <div class="error-notification">
+        <div class="error-content">
+          <span class="error-message">Failed to refresh data: {error}</span>
+          <button class="error-close" onclick={handleCloseErrorNotification} title="Close">
+            ✕
+          </button>
+        </div>
       </div>
-    </div>
+    {/if}
   {/if}
-{/if}
+</div>
 
 <style>
   /* Global styles */
