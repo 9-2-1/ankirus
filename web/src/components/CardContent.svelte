@@ -3,6 +3,7 @@
 
   import DOMPurify from 'dompurify';
   import { mathJaxReady, renderMathJax } from '../utils/mathJax.svelte';
+  import { tick } from 'svelte';
 
   let { content }: { content: string } = $props();
 
@@ -12,7 +13,10 @@
   $effect(() => {
     if (mathJaxReady.value) {
       sanitizedContent = DOMPurify.sanitize(content);
-      renderMathJax(containerRef!);
+      // 在 DOM 更新后再调用 MathJax.
+      tick().then(() => {
+        renderMathJax(containerRef!);
+      });
     }
   });
 </script>
