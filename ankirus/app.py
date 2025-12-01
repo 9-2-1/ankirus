@@ -9,7 +9,7 @@ from .services.anki_reader import AnkiCachedReader
 from .services.sanitizer import TextSanitizer
 from .models.config import Config
 from .routes.cards import handle_cards, handle_count_due_cards
-from .routes.index import handle_index, handle_old_index
+from .routes.index import handle_index
 
 log = logging.getLogger(__name__)
 
@@ -56,15 +56,13 @@ class App:
         """设置应用路由"""
         # 绑定应用实例到路由处理函数
         app.router.add_get("/", handle_index)
-        app.router.add_get("/web_old/", handle_old_index)
         app.router.add_get("/cards/", lambda request: handle_cards(self, request))
         app.router.add_get(
             "/cards/due/", lambda request: handle_count_due_cards(self, request)
         )
 
         # 静态文件路由
-        app.router.add_static("/assets/", "web_new/dist/assets")
-        app.router.add_static("/web_old/static/", "web_old")
+        app.router.add_static("/assets/", "web/dist/assets")
         app.router.add_static(
             "/", self.config.get("userprofile") + self.config.get("media")
         )
