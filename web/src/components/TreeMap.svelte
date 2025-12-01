@@ -186,12 +186,12 @@
 
   /* Node selection states */
   .treemap-rect.selected {
-    stroke: #007bff !important;
-    stroke-width: 2px !important;
+    stroke: #007bff;
+    stroke-width: 2px;
   }
 
   .treemap-rect.paused {
-    stroke: #ff0000 !important;
-    stroke-width: 2px !important;
+    stroke: #ff0000;
+    stroke-width: 2px;
   }
 </style>
