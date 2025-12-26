@@ -78,7 +78,11 @@ export function interpolateColor(retention: number): RGBColor {
 export function getBorderColor(retention: number): RGBColor {
   const color = interpolateColor(retention);
   // Mix with white: (color + white) / 2
-  return { r: Math.round((color.r + 255) / 2), g: Math.round((color.g + 255) / 2), b: Math.round((color.b + 255) / 2) };
+  return {
+    r: Math.round((color.r + 255) / 2),
+    g: Math.round((color.g + 255) / 2),
+    b: Math.round((color.b + 255) / 2),
+  };
 }
 
 /**
