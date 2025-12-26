@@ -6,6 +6,7 @@ import logging
 import time
 import asyncio
 from typing import Optional, Callable, Awaitable, List
+from pathlib import Path
 
 from anki.collection import Collection
 from anki.cards import Card
@@ -191,6 +192,7 @@ def _calculate_due_time(card: Card, crt: int, tzoffs: int, rollover: int) -> int
 def sync_cp_rm(src: str, dst: str) -> None:
     """同步复制或删除文件"""
     if os.path.exists(src):
+        Path(dst).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(src, dst)
     elif os.path.exists(dst):
         os.remove(dst)

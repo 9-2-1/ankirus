@@ -62,7 +62,7 @@ class App:
         )
 
         # 静态文件路由
-        app.router.add_static("/assets/", "web/dist/assets")
+        app.router.add_static("/assets/", "frontend/dist/assets")
         app.router.add_static(
             "/", self.config.get("userprofile") + self.config.get("media")
         )

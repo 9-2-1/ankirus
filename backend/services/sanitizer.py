@@ -2,6 +2,7 @@
 
 import sqlite3
 from typing import List
+from pathlib import Path
 
 
 class TextSanitizer:
@@ -9,6 +10,7 @@ class TextSanitizer:
 
     def __init__(self, banned_words_path: str, cache_db_path: str):
         self.banned_words = self._load_banned_words(banned_words_path)
+        Path(cache_db_path).parent.mkdir(parents=True, exist_ok=True)
         self.cachedb = sqlite3.connect(cache_db_path)
         self._init_cache_table()
 

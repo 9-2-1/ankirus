@@ -5,4 +5,4 @@ from aiohttp import web
 
 async def handle_index(request: web.Request) -> web.FileResponse:
     """处理根路径"""
-    return web.FileResponse("web/dist/index.html")
+    return web.FileResponse("frontend/dist/index.html")

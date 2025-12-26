@@ -110,7 +110,7 @@
             width={groupNode.x1 - groupNode.x0}
             height={groupNode.y1 - groupNode.y0}
             fill="none"
-            stroke="black"
+            stroke="white"
             stroke-width="3"
           />
         {/each}

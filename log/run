@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Get name of service from PWD
+pwd=${PWD%/*}
+service=${pwd##*/}
+
+mkdir -p "$SVLOG/$service"
+
+exec svlogd -tt "$SVLOG/$service"

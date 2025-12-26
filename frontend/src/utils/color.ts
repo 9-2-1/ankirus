@@ -73,12 +73,12 @@ export function interpolateColor(retention: number): RGBColor {
 }
 
 /**
- * Get border color (mixed with black)
+ * Get border color (mixed with white)
  */
 export function getBorderColor(retention: number): RGBColor {
   const color = interpolateColor(retention);
-  // Mix with black: color / 2
-  return { r: Math.round(color.r / 2), g: Math.round(color.g / 2), b: Math.round(color.b / 2) };
+  // Mix with white: (color + white) / 2
+  return { r: Math.round((color.r + 255) / 2), g: Math.round((color.g + 255) / 2), b: Math.round((color.b + 255) / 2) };
 }
 
 /**
@@ -92,5 +92,7 @@ export function rgbToCss(color: RGBColor): string {
  * Get text color by mixing background color with 50% black
  */
 export function getTextColor(retention: number): RGBColor {
-  return getBorderColor(retention);
+  const color = interpolateColor(retention);
+  // Mix with white: color / 2
+  return { r: Math.round(color.r / 2), g: Math.round(color.g / 2), b: Math.round(color.b / 2) };
 }

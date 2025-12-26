@@ -9,3 +9,4 @@ tmp-*
 banned_words.txt
 dist
 .st*
+supervise

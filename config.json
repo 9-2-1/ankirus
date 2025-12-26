@@ -1,8 +1,8 @@
 {
   "media": "media/",
-  "userprofile": "/home/richia/ankiserver/arigi/",
-  "tmp_db": "tmp-collection.anki2",
-  "cachedb": "cache.db",
+  "userprofile": "/home/richia/arigi.top/data/ankiserver/arigi/",
+  "tmp_db": "/home/richia/arigi.top/data/ankirus/tmp-collection.anki2",
+  "cachedb": "/home/richia/arigi.top/data/ankirus/cache.db",
   "port": 24032,
   "cache_ttl": 86400,
   "banned_words": "banned_words.txt",
