@@ -1,0 +1,4 @@
+#!/bin/bash
+cd $(dirname "$0")
+~/venv/bin/pip install -r requirements.txt
+mkdir ../../data/ankirus 2>/dev/null
